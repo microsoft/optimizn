@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from optimizn.combinatorial.algorithms.travelling_salesman.city_graph\
+from optimizn.combinatorial.algorithms.traveling_salesman.city_graph\
     import CityGraph
-from optimizn.combinatorial.algorithms.travelling_salesman.bnb_tsp import\
-    TravellingSalesmanProblem
+from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp import\
+    TravelingSalesmanProblem
 from python_tsp.heuristics import solve_tsp_simulated_annealing
 import numpy as np
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
@@ -38,7 +38,7 @@ def test_get_closest_city():
         (1, {0, 3, 2, 1}, None)
     ]
     for city, visited, true_closest in TEST_CASES:
-        tsp = TravellingSalesmanProblem(params)
+        tsp = TravelingSalesmanProblem(params)
         closest = tsp._get_closest_city(city, visited)
         assert closest == true_closest, 'Incorrect closest vertex to '\
             + f'vertex {city}. Expected: {true_closest}. Actual: {closest}'
@@ -55,7 +55,7 @@ def test_is_feasible():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, boolean for whether solution is feasible)
         (([0, 1, 2, 3], 3), True),
@@ -84,7 +84,7 @@ def test_is_complete():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, boolean for whether solution is complete)
         (([0, 1, 2, 3], 3), True),
@@ -114,7 +114,7 @@ def test_complete_path():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (path, completed path)
         ([], [0, 3, 2, 1]),
@@ -141,7 +141,7 @@ def test_get_candidate_sorted_dists():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     exp_init_sol = ([0, 3, 2, 1], -1)
     exp_sorted_dists = [1, 2, 2, 3, 4, 4]
     assert tsp.best_solution == exp_init_sol, 'Invalid initial solution. '\
@@ -161,7 +161,7 @@ def test_complete_solution():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (partial solution, expected complete solution)
         (([], -1), ([0, 3, 2, 1], -1)),
@@ -188,7 +188,7 @@ def test_cost():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, cost of solution)
         (([0, 3, 2, 1], 2), 10),
@@ -213,7 +213,7 @@ def test_lbound():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, lower bound of solution)
         (([0, 3, 2, 1], 3), 10),
@@ -242,7 +242,7 @@ def test_branch():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravellingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, expected branched solutions)
         (([0, 3, 2, 1], -1), [([0], 0), ([1], 0), ([2], 0), ([3], 0)]),
@@ -264,13 +264,13 @@ def test_bnb_tsp():
     params = {
         'input_graph': graph,
     }
-    tsp1 = TravellingSalesmanProblem(params)
+    tsp1 = TravelingSalesmanProblem(params)
     init_cost1 = tsp1.best_cost
     _, distance = solve_tsp_simulated_annealing(
         graph.dists, x0=tsp1.best_solution[0], perturbation_scheme='ps2',
         alpha=0.99)
     tsp1.solve(1e20, 1e20, 120, 0)
-    tsp2 = TravellingSalesmanProblem(params)
+    tsp2 = TravelingSalesmanProblem(params)
     init_cost2 = tsp2.best_cost
     tsp2.solve(1e20, 1e20, 120, 1)
 

@@ -62,7 +62,7 @@ class BinPackingProblem(BnBProblem):
 
         Source:
 
-        [1]
+        (1)
         Title: Knapsack Problems, Algorithms and Computer Implementations
         Author: Silvano Martello, Paolo Toth
         URL: http://www.or.deis.unibo.it/knapsack.html, specifically the PDF for
@@ -118,7 +118,7 @@ class BinPackingProblem(BnBProblem):
 
         Source:
 
-        [1] 
+        (1) 
         Title: Knapsack Problems, Algorithms and Computer Implementations
         Author: Silvano Martello, Paolo Toth
         URL: http://www.or.deis.unibo.it/knapsack.html, specifically the PDF for

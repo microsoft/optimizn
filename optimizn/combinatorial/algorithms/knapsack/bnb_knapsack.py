@@ -32,7 +32,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
 
     Source:
 
-    [1]
+    (1)
     Title: 7.2 0/1 Knapsack using Branch and Bound
     Author: Abdul Bari
     URL: https://www.youtube.com/watch?v=yV1d-b_NeK8

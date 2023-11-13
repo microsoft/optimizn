@@ -54,13 +54,11 @@ class BnBProblem(OptProblem):
 
     def complete_solution(self, sol):
         '''
-        Completes an incomplete solution using a heuristic for early detection
-        of decently optimal solutions (only needed for modified branch and
-        bound algorithm)
+        Completes an incomplete solution for early detection of decently
+        optimal solutions (only needed for modified branch and bound algorithm)
         '''
         raise NotImplementedError(
-            'Implement a function to complete an incomplete solution using a '
-            + 'heuristic')
+            'Implement a function to complete an incomplete solution')
 
     def _print_results(self, iters, print_iters, time_elapsed, force=False):
         if force or iters == 1 or iters % print_iters == 0:
@@ -84,28 +82,30 @@ class BnBProblem(OptProblem):
     def solve(self, iters_limit=1e6, print_iters=100, time_limit=3600,
               bnb_type=0):
         '''
+        This library's branch and bound implementation is based on the
+        pseudocode and explanation of eager branch and bound presented in
+        source (1) and the demonstration of branch and bound shown in source
+        (2).
+
         This function executes either the traditional (bnb_type=0) or modified
         (bnb_type=1) branch and bound algorithm. In traditional branch and
-        bound, partial solutions are not evaluated against the current best
-        solution, while in modified branch and bound, partial solutions are
-        completed and evaluated against the current best solution.
-        
-        This library's branch and bound implementation and the traditional
-        branch and bound algorithm are based on the pseudocode and explanation
-        of eager branch and bound presented in source [1]. The modified branch
-        and bound algorithm is based on the demonstration of branch and bound
-        in source [2].
+        bound, feasible and partial solutions are not completed and are not
+        evaluated against the current best solution, while in modified branch
+        and bound, feasible and partial solutions are completed and evaluated
+        against the current best solution. This completion and evaluation of
+        feasible, partial solutions is based on the demonstration of branch
+        and bound shown in source (2).
 
         Sources:
 
-        [1]
+        (1)
         Title: Branch and Bound Algorithms - Principles and Examples.
         Author: Jens Clausen
         URL: https://imada.sdu.dk/~jbj/heuristikker/TSPtext.pdf 
         Date published: March 12, 1999
         Date accessed: December 16, 2022
 
-        [2] 
+        (2) 
         Title: 7.2 0/1 Knapsack using Branch and Bound
         Author: Abdul Bari
         URL: https://www.youtube.com/watch?v=yV1d-b_NeK8
