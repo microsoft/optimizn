@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from optimizn.combinatorial.algorithms.travelling_salesman.city_graph\
+from optimizn.combinatorial.algorithms.traveling_salesman.city_graph\
     import CityGraph
-from optimizn.combinatorial.algorithms.travelling_salesman.sim_anneal_tsp\
+from optimizn.combinatorial.algorithms.traveling_salesman.sim_anneal_tsp\
     import TravSalsmn
-from optimizn.combinatorial.algorithms.travelling_salesman.bnb_tsp\
-    import TravellingSalesmanProblem
+from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp\
+    import TravelingSalesmanProblem
 from python_tsp.heuristics import solve_tsp_simulated_annealing
 from optimizn.combinatorial.opt_problem import load_latest_pckl
 import time
@@ -100,7 +100,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
         results['sa2_time'].append(e - s)
 
     # run modified branch and bound
-    mod_tsp_bnb = TravellingSalesmanProblem({'input_graph': city_graph})
+    mod_tsp_bnb = TravelingSalesmanProblem({'input_graph': city_graph})
     results['mod_bnb_init_sol'] = mod_tsp_bnb.best_solution
     results['mod_bnb_init_sol_cost'] = mod_tsp_bnb.best_cost
     s = time.time()
@@ -128,7 +128,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
         shutil.rmtree(path='Data/TravelingSalesmanProblem')
 
     # run traditional branch and bound
-    trad_tsp_bnb = TravellingSalesmanProblem({'input_graph': city_graph})
+    trad_tsp_bnb = TravelingSalesmanProblem({'input_graph': city_graph})
     results['trad_bnb_init_sol'] = trad_tsp_bnb.best_solution
     results['trad_bnb_init_sol_cost'] = trad_tsp_bnb.best_cost
     s = time.time()
