@@ -30,15 +30,15 @@ class BnBProblem(OptProblem):
 
     def branch(self, sol):
         '''
-        Generates other potential solutions from an existing feasible solution
+        Generates other solutions from a feasible solution
         '''
         raise NotImplementedError(
-            'Implement a function to produce other potential solutions from a '
-            + 'single feasible solution')
+            'Implement a function to produce other solutions from a feasible '
+            + ' solution')
 
     def is_complete(self, sol):
         '''
-        Checks if a potential solution is a complete solution
+        Checks if a solution is a complete solution
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a complete '
@@ -46,7 +46,7 @@ class BnBProblem(OptProblem):
 
     def is_feasible(self, sol):
         '''
-        Checks if potential solution is a feasible solution
+        Checks if a solution is a feasible solution
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a feasible '
