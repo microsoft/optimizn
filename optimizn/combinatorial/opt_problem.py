@@ -51,8 +51,7 @@ class OptProblem():
         pickle.dump(self, file1)
         print("Wrote to DailyOpt")
 
-        # Now check if the current best is better
-        # than the global best
+        # Now check if the current best is better than the global best
         existing_best = load_latest_pckl("Data//" + self.name + "//GlobalOpt")
         if existing_best is None or self.best_cost > existing_best.best_cost\
                 or self.obj_changed:
