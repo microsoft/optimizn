@@ -34,6 +34,12 @@ class SimAnnealProblem(OptProblem):
         This simulated annealing implementation is based on the code and
         explanation of simulated annealing presented in the following sources.
 
+        One key difference between this simulated annealing implementation and
+        the simulated annealing implementation from the following sources is
+        that this implementation features resetting the current solution under
+        the reset probability (reset_p), while the implementation from the
+        following sources does not. 
+
         Sources:
         
         (1)

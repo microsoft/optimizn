@@ -9,6 +9,56 @@ from optimizn.combinatorial.simulated_annealing import SimAnnealProblem
 
 
 class TravSalsmn(SimAnnealProblem):
+    '''
+    This simulated annealing implementation for the traveling salesman
+    problem is based on the simulated annealing implementation for the
+    traveling salesman problem presented in source (1) and source (2).
+
+    There are some key differences. First, the initial solution in the
+    implementation from source (1) and source (2) is a random tour, but the 
+    initial solution in this implementation is a greedily-assembled tour
+    produced by the nearest neighbor approximation algorithm, which is
+    presented in source (3). Second, the implementation from source (1) and
+    source (2) generates neighboring solutions by randomly selecting two cities
+    and reversing the portion of the tour between (inclusive) those two cities,
+    while this implementation generates neighboring solutions by swapping the
+    positions of two random cities in the tour and leaving all other cities in
+    the same position. Third, this implementation features resetting the
+    current solution (to a random tour) under the reset probability, while the
+    implementation from source (1) and source (2) does not.
+
+    Sources:
+        
+    (1)
+    Title: toddwschneider/shiny-salesman
+    Author: Todd W. Schneider
+    URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
+    Date published: October 1, 2014
+    Date accessed: January 8, 2023
+
+    The code presented in this source is licensed under the MIT License.
+    The original license text is shown in the NOTICE.md file.
+
+    (2)
+    Title: The Traveling Salesman with Simulated Annealing, R, and Shiny
+    Author: Todd W. Schneider
+    URL: https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/
+    Date published: October 1, 2014
+    Date accessed: January 8, 2023
+    
+    (3)
+    Title: An Analysis of Several Heuristics for the Traveling Salesman
+    Problem
+    Authors: Daniel J. Rosenkrantz, Richard E. Stearns, and Philip M.
+    Lewis II
+    Journal: SIAM Journal on Computing
+    Volume: 6
+    Number: 3
+    DOI: 10.1137/0206041
+    URL: https://www.researchgate.net/publication/220616869_An_Analysis_of_Several_Heuristics_for_the_Traveling_Salesman_Problem
+    Date published: September 1977
+    Date accessed: 2021
+    '''
     def __init__(self, params):
         self.params = params
         super().__init__()
