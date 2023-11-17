@@ -30,21 +30,20 @@ class TravSalsmn(SimAnnealProblem):
     Sources:
         
     (1)
-    Title: toddwschneider/shiny-salesman
-    Author: Todd W. Schneider
-    URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
-    Date published: October 1, 2014
-    Date accessed: January 8, 2023
-
-    The code presented in this source is licensed under the MIT License.
-    The original license text is shown in the NOTICE.md file.
-
-    (2)
     Title: The Traveling Salesman with Simulated Annealing, R, and Shiny
     Author: Todd W. Schneider
     URL: https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/
     Date published: October 1, 2014
     Date accessed: January 8, 2023
+    
+    (2)
+    Title: toddwschneider/shiny-salesman
+    Author: Todd W. Schneider
+    URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
+    Date published: October 1, 2014
+    Date accessed: January 8, 2023
+    The code presented in this source is licensed under the MIT License.
+    The original license text is shown in the NOTICE.md file.
     
     (3)
     Title: An Analysis of Several Heuristics for the Traveling Salesman

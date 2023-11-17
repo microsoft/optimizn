@@ -21,8 +21,8 @@ class BnBProblem(OptProblem):
 
     def lbound(self, sol):
         '''
-        Computes lower bound for a solution and the feasible solutions that
-        can be obtained from it
+        Computes lower bound for a feasible solution and the solutions that
+        can be obtained from it through branching
         '''
         raise NotImplementedError(
             'Implement a function to compute a lower bound on a feasible '
@@ -38,7 +38,8 @@ class BnBProblem(OptProblem):
 
     def is_complete(self, sol):
         '''
-        Checks if a solution is a complete solution
+        Checks if a solution is a complete solution (solves the optimization
+        problem)
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a complete '
@@ -46,7 +47,8 @@ class BnBProblem(OptProblem):
 
     def is_feasible(self, sol):
         '''
-        Checks if a solution is a feasible solution
+        Checks if a solution is a feasible solution (is within the constraints
+        of the optimization problem)
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a feasible '
