@@ -38,26 +38,29 @@ class SimAnnealProblem(OptProblem):
         the simulated annealing implementation from the following sources is
         that this implementation features resetting the current solution under
         the reset probability (reset_p), while the implementation from the
-        following sources does not. 
+        following sources does not. Another key difference is that this
+        implementation determines the temperature based on the number of
+        iterations since the last time the current solution was reset, while
+        the implementation from the following sources determines the
+        temperature based on the total number of iterations.
 
         Sources:
-        
+
         (1)
-        Title: toddwschneider/shiny-salesman
-        Author: Todd W. Schneider
-        URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
-        Date published: October 1, 2014
-        Date accessed: January 8, 2023
-
-        The code presented in this source is licensed under the MIT License.
-        The original license text is shown in the NOTICE.md file.
-
-        (2)
         Title: The Traveling Salesman with Simulated Annealing, R, and Shiny
         Author: Todd W. Schneider
         URL: https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/
         Date published: October 1, 2014
         Date accessed: January 8, 2023
+        
+        (2)
+        Title: toddwschneider/shiny-salesman
+        Author: Todd W. Schneider
+        URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
+        Date published: October 1, 2014
+        Date accessed: January 8, 2023
+        The code presented in this source is licensed under the MIT License.
+        The original license text is shown in the NOTICE.md file.
         '''
         reset = False
         j = -1
