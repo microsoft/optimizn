@@ -12,7 +12,7 @@ TEST_DEPS = ['pytest']
 DEV_DEPS = []
 
 setup(name='optimizn',
-      version='0.0.11',
+      version='0.0.12',
       author='Rohit Pandey, Akshay Sathiya',
       author_email='rohitpandey576@gmail.com, akshay.sathiya@gmail.com',
       description='A Python library for developing customized optimization '
