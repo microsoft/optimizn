@@ -10,7 +10,7 @@ from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol_optimality, check_sol_vs_init_sol
 
 
-def test_constructor():
+def test_constructor_get_root():
     TEST_CASES = [
         # test case: (suitcase configuration, expected suitcase capacities,
         # expected cost of initial solution)
@@ -36,9 +36,18 @@ def test_constructor():
         init_suitcase_num = init_sol[1]
         assert srp.best_cost == cost, 'Incorrect initial solution cost. '\
             + f'Expected: {cost}. Actual: {srp.best_cost}'
-        assert init_suitcase_num == -1, 'Incorrect suitcase number (for '\
-            + 'branching) in initial solution. Expected: -1. Actual: '\
+        assert init_suitcase_num == -1, 'Incorrect suitcase number '\
+            + 'in initial solution. Expected: -1. Actual: '\
             + f'{init_suitcase_num}'
+        
+        # check root node solution
+        root_sol = srp.get_root()
+        root_sol_cost = srp.cost(root_sol)
+        assert root_sol_cost == cost, 'Incorrect root node solution cost. '\
+            + f'Expected: {cost}. Actual: {root_sol_cost}'
+        assert root_sol[1] == -1, 'Incorrect suitcase number (for '\
+            + 'branching) in root node solution. Expected: -1. Actual: '\
+            + f'{root_sol[1]}'
 
 
 def test_cost():

@@ -54,6 +54,9 @@ class BinPackingProblem(BnBProblem):
     
     def get_candidate(self):
         return (self._pack_rem_items(dict(), -1), -1)
+    
+    def get_root(self):
+        return (self._pack_rem_items(dict(), -1), -1)
 
     def _pack_rem_items(self, bin_packing, last_item_idx):
         '''

@@ -42,6 +42,9 @@ class MinPathCoverProblem1(BnBProblem):
 
     def get_candidate(self):
         return (np.ones(len(self.all_paths)), -1)
+    
+    def get_root(self):
+        return (np.ones(len(self.all_paths)), -1)
 
     def _get_all_paths(self):
         self.all_paths = []
@@ -196,6 +199,10 @@ class MinPathCoverProblem2(BnBProblem):
         super().__init__(params)
 
     def get_candidate(self):
+        return (np.zeros((0, 3)), np.array(self.all_paths),
+                min(self.vertices) - 1)
+    
+    def get_root(self):
         return (np.zeros((0, 3)), np.array(self.all_paths),
                 min(self.vertices) - 1)
 

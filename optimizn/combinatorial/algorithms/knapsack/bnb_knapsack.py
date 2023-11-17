@@ -3,6 +3,7 @@
 
 import numpy as np
 from optimizn.combinatorial.branch_and_bound import BnBProblem
+from copy import deepcopy
 
 
 class KnapsackParams:
@@ -40,8 +41,8 @@ class ZeroOneKnapsackProblem(BnBProblem):
     Date accessed: December 16, 2022
     '''
     def __init__(self, params):
-        self.values = np.array(params.values)
-        self.weights = np.array(params.weights)
+        self.values = params.values
+        self.weights = params.weights
         self.capacity = params.capacity
 
         # value/weight ratios, in decreasing order
@@ -55,6 +56,9 @@ class ZeroOneKnapsackProblem(BnBProblem):
 
     def get_candidate(self):
         return self.complete_solution([])
+    
+    def get_root(self):
+        return []
 
     def lbound(self, sol):
         value = 0
@@ -80,32 +84,15 @@ class ZeroOneKnapsackProblem(BnBProblem):
         return -1 * value
 
     def cost(self, sol):
-        return -1 * np.sum(sol * self.values)
+        return -1 * np.sum(np.array(sol) * np.array(self.values[:len(sol)]))
 
     def branch(self, sol):
-        exp_idx = len(sol)
-        if exp_idx >= len(self.weights):
+        if len(sol) >= len(self.weights):
             return []
 
         new_sols = []
         for val in [0, 1]:
-            new_sol = np.zeros(len(sol))
-            new_sol[0:exp_idx] = sol[0:exp_idx]
-            new_sol[exp_idx] = val
-            weight = np.sum(new_sol * self.weights)
-
-            # greedily take other items
-            for _, ix in self.sorted_vw_ratios:
-                if ix < exp_idx + 1:
-                    continue
-                rem_cap = self.capacity - weight
-                if rem_cap <= 0:
-                    break
-                if self.weights[ix] <= rem_cap:
-                    new_sol[ix] = 1
-                    weight += self.weights[ix]
-
-            new_sols.append((new_sol, exp_idx))
+            new_sols.append(deepcopy(sol) + [val])
         return new_sols
 
     def is_feasible(self, sol):
@@ -115,11 +102,12 @@ class ZeroOneKnapsackProblem(BnBProblem):
         check_length = check_length1 and check_length2
 
         # check that the only values in the array are 0 and 1
-        check_values = len(set(sol.tolist()).difference({0, 1})) == 0
+        check_values = len(set(sol).difference({0, 1})) == 0
 
         # check that the weight of the values in the array is not greater
         # than the capacity
-        check_weight = np.sum(sol * self.weights) <= self.capacity
+        check_weight = np.sum(np.array(sol) * np.array(
+            self.weights[:len(sol)])) <= self.capacity
 
         return check_length and check_values and check_weight
 
@@ -134,7 +122,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
     def complete_solution(self, sol):
         # greedily add other items to array
         knapsack = [0] * len(self.weights)
-        knapsack[0:len(sol)] = list(sol)
+        knapsack[0:len(sol)] = sol
         value = 0
         weight = 0
         for i in range(len(knapsack)):
@@ -153,4 +141,4 @@ class ZeroOneKnapsackProblem(BnBProblem):
             weight += self.weights[ix]
             knapsack[ix] = 1
         
-        return np.array(knapsack)
+        return knapsack
