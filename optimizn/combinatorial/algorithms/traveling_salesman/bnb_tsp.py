@@ -66,79 +66,69 @@ class TravelingSalesmanProblem(BnBProblem):
 
     def get_candidate(self):
         # greedily assemble a path from scratch
-        # solution format is 2-tuple, first element is the path itself and
-        # the second element is the index of the last confirmed city (last
-        # confirmed index), which is used for branching
-        return (self._complete_path([]), -1)
+        return self._complete_path([])
+    
+    def get_root(self):
+        # return empty path
+        return []
 
     def complete_solution(self, sol):
         # greedily complete the path using the remaining/unvisited cities
-        return (self._complete_path(sol[0]), sol[1])
+        return self._complete_path(sol)
 
     def cost(self, sol):
         # sum of distances between adjacent cities in path, and from last
         # city to first city in path
-        path = sol[0]
         path_cost = 0
         for i in range(self.input_graph.num_cities - 1):
-            path_cost += self.input_graph.dists[path[i], path[i + 1]]
+            path_cost += self.input_graph.dists[sol[i], sol[i + 1]]
         path_cost += self.input_graph.dists[
-            path[self.input_graph.num_cities - 1], path[0]]
+            sol[self.input_graph.num_cities - 1], sol[0]]
         return path_cost
 
     def lbound(self, sol):
-        # sum of distances between confirmed cities and smallest distances
+        # sum of distances between cities in path and smallest distances
         # to account for remaining cities and start city
-        path = sol[0]
-        last_confirmed_idx = sol[1]
+        num_cities_in_path = len(sol)
         lb_path_cost = 0
-        for i in range(last_confirmed_idx):
-            lb_path_cost += self.input_graph.dists[path[i], path[i + 1]]
-        if last_confirmed_idx + 1 == self.input_graph.num_cities:
+        for i in range(num_cities_in_path - 1):
+            lb_path_cost += self.input_graph.dists[sol[i], sol[i + 1]]
+        if num_cities_in_path == self.input_graph.num_cities:
             lb_path_cost += self.input_graph.dists[
-                path[last_confirmed_idx], path[0]]
+                sol[num_cities_in_path - 1], sol[0]]
+        elif num_cities_in_path == 0:
+            lb_path_cost += sum(self.sorted_dists[
+                :self.input_graph.num_cities])
         else:
             lb_path_cost += sum(self.sorted_dists[
-                :self.input_graph.num_cities - last_confirmed_idx])
+                :self.input_graph.num_cities - num_cities_in_path + 1])
         return lb_path_cost
 
     def is_complete(self, sol):
         # check that all cities covered once, path length is equal to the
         # number of cities
-        path = sol[0]
-        check_all_cities_covered = set(path) == set(
+        check_all_cities_covered = set(sol) == set(
             range(self.input_graph.num_cities))
-        check_cities_covered_once = len(path) == len(set(path))
-        check_path_length = len(path) == self.input_graph.num_cities
+        check_cities_covered_once = len(sol) == len(set(sol))
+        check_path_length = len(sol) == self.input_graph.num_cities
         return (check_path_length and check_cities_covered_once and
                 check_all_cities_covered)
 
     def is_feasible(self, sol):
-        # check that covered cities are valid, covered cities are only covered
-        # once, path length is less than or equal to the number of cities, and
-        # last confirmed index is valid
-        path = sol[0]
-        last_confirmed_idx = sol[1]
-        check_covered_cities = len(set(path).difference(
-                set(range(self.input_graph.num_cities)))) == 0
-        check_cities_covered_once = len(path) == len(set(path))
-        check_path_length = len(path) <= self.input_graph.num_cities
-        check_last_confirmed_index = last_confirmed_idx < len(path)\
-            and last_confirmed_idx >= -1
-        return (check_covered_cities and check_cities_covered_once and
-                check_path_length and check_last_confirmed_index)
+        # check that covered cities are only covered once and path length is
+        # less than or equal to the number of cities
+        check_cities_covered_once = len(sol) == len(set(sol))
+        check_path_length = len(sol) <= self.input_graph.num_cities
+        return check_cities_covered_once and check_path_length
 
     def branch(self, sol):
-        # build the path from the last confirmed city, by creating a new
-        # solution where each uncovered city is the next confirmed city
-        path = sol[0]
-        last_confirmed_idx = sol[1]
-        if last_confirmed_idx >= self.input_graph.num_cities - 1:
+        # build the path by creating a new solution for each uncovered city,
+        # where the uncovered city is the next city in the path
+        if len(sol) == self.input_graph.num_cities:
             return []
-        visited = set(path[:last_confirmed_idx + 1])
+        visited = set(sol)
         new_sols = []
         for new_city in range(self.input_graph.dists.shape[0]):
             if new_city not in visited:
-                new_sols.append((path[:last_confirmed_idx + 1] + [new_city],
-                                 last_confirmed_idx + 1))
+                new_sols.append(sol + [new_city])
         return new_sols
