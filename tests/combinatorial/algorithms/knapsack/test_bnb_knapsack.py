@@ -31,5 +31,4 @@ def test_bnb_zeroone_knapsack():
             check_sol_vs_init_sol(kp.best_cost, init_cost)
 
             # check final solution optimality
-            sol = list(kp.best_solution)
-            check_sol(sol, [opt_sol])
+            check_sol(kp.best_solution, [opt_sol])

@@ -46,6 +46,9 @@ class SuitcaseReshuffleProblem(BnBProblem):
 
     def get_candidate(self):
         return (deepcopy(self.suitcases), -1)
+    
+    def get_root(self):
+        return (deepcopy(self.suitcases), -1)
 
     def cost(self, sol):
         suitcases = sol[0]
