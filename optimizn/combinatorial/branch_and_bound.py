@@ -30,11 +30,11 @@ class BnBProblem(OptProblem):
 
     def branch(self, sol):
         '''
-        Generates other solutions from a feasible solution
+        Generates other solutions from a feasible solution (branching)
         '''
         raise NotImplementedError(
-            'Implement a function to produce other solutions from a feasible '
-            + ' solution')
+            'Implement a branching function to produce other solutions from a '
+            + 'feasible solution')
 
     def is_complete(self, sol):
         '''
@@ -43,21 +43,24 @@ class BnBProblem(OptProblem):
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a complete '
-            + 'solution')
+            + 'solution (solves the optimization problem)')
 
     def is_feasible(self, sol):
         '''
         Checks if a solution is a feasible solution (is within the constraints
-        of the optimization problem)
+        of the optimization problem, can be a complete solution or a partial
+        solution)
         '''
         raise NotImplementedError(
             'Implement a function to check if a solution is a feasible '
-            + 'solution')
+            + 'solution (is within the constraints of the optimization '
+            + 'problem, can be a complete solution or a partial solution)')
 
     def complete_solution(self, sol):
         '''
-        Completes an incomplete solution for early detection of decently
-        optimal solutions (only needed for modified branch and bound algorithm)
+        Completes an incomplete solution for early detection of solutions
+        that are potentially more optimal than the most optimal solution
+        already observed (only needed for modified branch and bound algorithm)
         '''
         raise NotImplementedError(
             'Implement a function to complete an incomplete solution')
@@ -97,6 +100,24 @@ class BnBProblem(OptProblem):
         against the current best solution. This completion and evaluation of
         feasible, partial solutions is based on the demonstration of branch
         and bound shown in source (2).
+
+        One key difference between this branch and bound implementation and
+        the branch and bound implementation and demonstration presented in
+        source (1) and source (2), respectively, is that this implementation
+        features a function to check if a solution is feasible (is within the
+        constraints of the optimization problem). This function is used to
+        omit infeasible solutions produced by the branch function from the
+        branch and bound algorithm. This gives the user more freedom when
+        writing their branch function, since any infeasible solutions it may
+        produce will not be considered in the branch and bound algorithm.
+
+        Note that the concept of a feasible solution used in this
+        implementation differs from the concept of a feasible solution in
+        source (1). In this implementation, feasible solutions can be complete
+        or partial solutions, so long as they are within the constraints of the
+        optimization problem. The concept of feasible solutions in source (1)
+        essentially corresponds to the concept of complete solutions in this
+        implementation.
 
         Sources:
 
