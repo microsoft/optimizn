@@ -58,13 +58,12 @@ def test_is_feasible():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, boolean for whether solution is feasible)
-        (([0, 1, 2, 3], 3), True),
-        (([1, 0, 2, 3], 2), True),
-        (([1, 0, 2, 3], 4), False),
-        (([1, 2, 2], 2), False),
-        (([1, 2, 3], 2), True),
-        (([1, 2, 3, 3], 2), False),
-        (([1, 2, 3, 0, 1], 3), False)
+        ([0, 1, 2, 3], True),
+        ([1, 0, 2, 3], True),
+        ([1, 2, 2], False),
+        ([1, 2, 3], True),
+        ([1, 2, 3, 3], False),
+        ([1, 2, 3, 0, 1], False)
     ]
     for sol, is_feasible in TEST_CASES:
         feasible = tsp.is_feasible(sol)
@@ -87,14 +86,10 @@ def test_is_complete():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, boolean for whether solution is complete)
-        (([0, 1, 2, 3], 3), True),
-        (([0, 1, 2, 3], 2), True),
-        (([1, 0, 2, 3], 3), True),
-        (([1, 0, 2, 3], 2), True),
-        (([1, 2], 1), False),
-        (([1, 2, 3], 2), False),
-        (([1, 2, 3, 0], 3), True),
-        (([1, 2, 3, 0, 1], 3), False)
+        ([0, 1, 2, 3], True),
+        ([1, 2], False),
+        ([1, 2, 3], False),
+        ([1, 2, 3, 0], True)
     ]
     for sol, is_complete in TEST_CASES:
         complete = tsp.is_complete(sol)
@@ -142,7 +137,7 @@ def test_get_candidate_sorted_dists():
         'input_graph': mcg,
     }
     tsp = TravelingSalesmanProblem(params)
-    exp_init_sol = ([0, 3, 2, 1], -1)
+    exp_init_sol = [0, 3, 2, 1]
     exp_sorted_dists = [1, 2, 2, 3, 4, 4]
     assert tsp.best_solution == exp_init_sol, 'Invalid initial solution. '\
         + f'Expected: {exp_init_sol}. Actual: {tsp.best_solution}'
@@ -164,11 +159,11 @@ def test_complete_solution():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (partial solution, expected complete solution)
-        (([], -1), ([0, 3, 2, 1], -1)),
-        (([0], 0), ([0, 3, 2, 1], 0)),
-        (([0, 1], 1), ([0, 1, 2, 3], 1)),
-        (([1, 3], 1), ([1, 3, 0, 2], 1)),
-        (([0, 3, 2, 1], 3), ([0, 3, 2, 1], 3))
+        ([], [0, 3, 2, 1]),
+        ([0], [0, 3, 2, 1]),
+        ([0, 1], [0, 1, 2, 3]),
+        ([1, 3], [1, 3, 0, 2]),
+        ([0, 3, 2, 1], [0, 3, 2, 1])
     ]
     for path, complete_path in TEST_CASES:
         comp_path = tsp.complete_solution(path)
@@ -191,10 +186,10 @@ def test_cost():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, cost of solution)
-        (([0, 3, 2, 1], 2), 10),
-        (([0, 3, 2, 1], 3), 10),
-        (([0, 1, 2, 3], 1), 10),
-        (([0, 1, 3, 2], 0), 12)
+        ([0, 3, 2, 1], 10),
+        ([0, 3, 2, 1], 10),
+        ([0, 1, 2, 3], 10),
+        ([0, 1, 3, 2], 12)
     ]
     for sol, cost in TEST_CASES:
         sol_cost = tsp.cost(sol)
@@ -216,14 +211,13 @@ def test_lbound():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, lower bound of solution)
-        (([0, 3, 2, 1], 3), 10),
-        (([0, 3, 2, 1], 1), 6),
-        (([0, 3, 2, 1], 2), 6),
-        (([0, 1, 2, 3], 3), 10),
-        (([0, 1, 3, 2], 3), 12),
-        (([0, 3], 1), 6),
-        (([0, 3, 2], 2), 6),
-        (([0], 0), 8)
+        ([0, 3, 2, 1], 10),
+        ([0, 3], 6),
+        ([0, 3, 2], 6),
+        ([0, 1, 2, 3], 10),
+        ([0, 1, 3, 2], 12),
+        ([0], 8),
+        ([], 8)
     ]
     for sol, lower_bound in TEST_CASES:
         lb = tsp.lbound(sol)
@@ -245,18 +239,29 @@ def test_branch():
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, expected branched solutions)
-        (([0, 3, 2, 1], -1), [([0], 0), ([1], 0), ([2], 0), ([3], 0)]),
-        (([0, 3, 2, 1], 3), []),
-        (([0, 2, 1, 3], 4), []),
-        (([0, 2, 1, 3], 1), [([0, 2, 1], 2), ([0, 2, 3], 2)]),
-        (([0, 1], 1), [([0, 1, 2], 2), ([0, 1, 3], 2)]),
-        (([0, 1, 2], 2), [([0, 1, 2, 3], 3)]),
-        (([1], 0), [([1, 0], 1), ([1, 2], 1), ([1, 3], 1)])
+        ([], [[0], [1], [2], [3]]),
+        ([0, 3, 2, 1], []),
+        ([0, 2, 1, 3], []),
+        ([0, 2], [[0, 2, 1], [0, 2, 3]]),
+        ([0, 1], [[0, 1, 2], [0, 1, 3]]),
+        ([0, 1, 2], [[0, 1, 2, 3]]),
+        ([1], [[1, 0], [1, 2], [1, 3]])
     ]
     for sol, branch_sols in TEST_CASES:
         new_sols = tsp.branch(sol)
         assert branch_sols == new_sols, 'Incorrect branched solutions for '\
             + f'solution: {sol}. Expected: {branch_sols}, Actual: {new_sols}'
+
+
+def test_get_root():
+    graph = CityGraph()
+    params = {
+        'input_graph': graph,
+    }
+    tsp = TravelingSalesmanProblem(params)
+    root_sol = tsp.get_root()
+    assert root_sol == [], 'Incorrect root node solution. Expected: '\
+        + f'[], Actual: {root_sol}'
 
 
 def test_bnb_tsp():

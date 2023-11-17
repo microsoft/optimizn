@@ -18,6 +18,15 @@ class BnBProblem(OptProblem):
                 self.best_solution):
             raise Exception('Initial solution is infeasible or incomplete: '
                             + f'{self.best_solution}')
+    
+    def get_root(self):
+        '''
+        Produces the solution corresponding to the root node of the solution
+        space tree structure
+        '''
+        raise NotImplementedError(
+            'Implement a function to get the solution corresponding to the '
+            + 'root node of the solution space tree structure')
 
     def lbound(self, sol):
         '''
@@ -150,11 +159,11 @@ class BnBProblem(OptProblem):
             for item in self.queue:
                 queue.put(item)
             self.queue = queue
-        # otherwise, queue is created as PriorityQueue, so put initial solution
+        # otherwise, queue is created as PriorityQueue, so put root solution
         # onto PriorityQueue
         else:
-            self.queue.put((self.lbound(self.best_solution), sol_count,
-                            self.best_solution))
+            root_sol = self.get_root()
+            self.queue.put((self.lbound(root_sol), sol_count, root_sol))
 
         # explore solutions
         while not self.queue.empty() and iters != iters_limit and\
