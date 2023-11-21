@@ -12,14 +12,14 @@ TEST_DEPS = ['pytest']
 DEV_DEPS = []
 
 setup(name='optimizn',
-      version='0.0.13',
+      version='0.0.14',
       author='Rohit Pandey, Akshay Sathiya',
       author_email='rohitpandey576@gmail.com, akshay.sathiya@gmail.com',
       description='A Python library for developing customized optimization '
-        + 'algorithms under generalizable paradigms.',
+        + 'algorithms under general paradigms.',
       packages=find_packages(exclude=['tests', 'experiments', 'Images']),
       long_description='A Python library for developing customized '
-        + 'optimization algorithms under generalizable paradigms like '
+        + 'optimization algorithms under general paradigms like '
         + 'simulated annealing and branch and bound. Also features '\
         + 'continuous training, so algorithms can be run multiple times '
         + 'and resume from where they left off in previous runs.',
