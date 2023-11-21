@@ -2,10 +2,9 @@
 
 class MultiArmedBandit:
     '''
-    This multi-armed bandit implementation is based on the following source.
-    Adapted to model arms with any number of outcomes.
+    This multi-armed bandit implementation is based on the following sources.
 
-    Source:
+    Sources:
 
     (1)
     Title: Chapter 9: Applications to Computing, 9.8: Multi-Armed Bandits 
@@ -13,7 +12,14 @@ class MultiArmedBandit:
     Tsun)
     Author: Alex Tsun
     URL: https://web.stanford.edu/class/archive/cs/cs109/cs109.1218/files/student_drive/9.8.pdf
-    Date accessed: 11/20/2023
+    Date accessed: November 20, 2023
+
+    (2)
+    Title: Multi-arm Bandits, The simplest reinforcement learning problem
+    Author: Doina Precup
+    URL: https://www.cs.mcgill.ca/~dprecup/courses/RL/Lectures/2-bandits-2019.pdf
+    Date published: 2019
+    Date accessed: November 20, 2023
     '''
     def __init__(self, n_arms, init_pulls):
         self.n_arms = n_arms
