@@ -1,7 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import time
+from optimizn.continuous_training.continuous_training import ContinuousTraining
 
 
-class MultiArmedBandit:
+class MultiArmedBandit(ContinuousTraining):
     '''
     This multi-armed bandit implementation is based on the following sources.
 
@@ -69,7 +73,7 @@ class MultiArmedBandit:
         '''
         pass
 
-    def _print_results(self):
+    def print_results(self):
         print(f'Arm pulls: {self.arm_pulls}')
         print('Estimated expected reward for each arm: '
                 + f'{self.est_exp_reward}\n')
@@ -92,13 +96,13 @@ class MultiArmedBandit:
 
             if (iter + 1) % print_iters == 0:
                 print(f'Iteration: {iter + 1}')
-                self._print_results()
+                self.print_results()
 
             # check if time limit has been exceeded
             time_elapsed = time.time() - start_time
             if time_elapsed >= time_limit:
                 print('Time limit reached, terminating algorithm')
-                self._print_results()
+                self.print_results()
                 break
         print('Number of iterations reached, terminating algorithm')
-        self._print_results()
+        self.print_results()
