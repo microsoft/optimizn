@@ -1,3 +1,4 @@
+import time
 
 
 class MultiArmedBandit:
@@ -68,8 +69,14 @@ class MultiArmedBandit:
         '''
         pass
 
-    def run(self, n_iters):
-        for _ in range(n_iters):
+    def _print_results(self):
+        print(f'Arm pulls: {self.arm_pulls}')
+        print('Estimated expected reward for each arm: '
+                + f'{self.est_exp_reward}\n')
+
+    def run(self, n_iters=1e6, print_iters=100, time_limit=3600):
+        start_time = time.time()
+        for iter in range(n_iters):
             # pull an arm to get some outcome
             arm = self.choose_arm()
             outcome = self.pull_arm(arm)
@@ -82,4 +89,16 @@ class MultiArmedBandit:
 
             # process the result of the arm pull
             self.process_result(arm, outcome, reward)
-            
+
+            if (iter + 1) % print_iters == 0:
+                print(f'Iteration: {iter + 1}')
+                self._print_results()
+
+            # check if time limit has been exceeded
+            time_elapsed = time.time() - start_time
+            if time_elapsed >= time_limit:
+                print('Time limit reached, terminating algorithm')
+                self._print_results()
+                break
+        print('Number of iterations reached, terminating algorithm')
+        self._print_results()

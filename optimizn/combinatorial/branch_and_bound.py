@@ -110,24 +110,6 @@ class BnBProblem(OptProblem):
         feasible, partial solutions is based on the demonstration of branch
         and bound shown in source (2).
 
-        One key difference between this branch and bound implementation and
-        the branch and bound pseudocode, explanation, and demonstration
-        presented in sources (1) and (2), is that this implementation
-        features a function to check if a solution is feasible (is within the
-        constraints of the optimization problem). This function is used to
-        omit infeasible solutions produced by the branch function from the
-        branch and bound algorithm. This gives the user more freedom when
-        writing their branch function, since any infeasible solutions it may
-        produce will not be considered in the branch and bound algorithm.
-
-        Note that the concept of a feasible solution used in this
-        implementation differs from the concept of a feasible solution in
-        source (1). In this implementation, feasible solutions can be complete
-        or partial solutions, so long as they are within the constraints of the
-        optimization problem. The concept of feasible solutions in source (1)
-        essentially corresponds to the concept of complete solutions in this
-        implementation.
-
         Sources:
 
         (1)
