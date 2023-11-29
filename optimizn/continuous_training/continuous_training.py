@@ -3,9 +3,14 @@
 
 import os
 import pickle
+from datetime import datetime
 
 
 class ContinuousTraining:
+    def __init__(self):
+        self.init_time = datetime.now()
+        self.init_secs = int(self.init_time.timestamp())
+
     def persist(self):
         # set name attribute, check for params attribute 
         self.name = self.__class__.__name__

@@ -32,6 +32,7 @@ class MultiArmedBandit(ContinuousTraining):
         self.arm_pulls = [0] * self.n_arms
         self.est_exp_reward = [0] * self.n_arms
         self.run(self.init_pulls)
+        super().__init__()
 
     def choose_arm(self):
         '''
