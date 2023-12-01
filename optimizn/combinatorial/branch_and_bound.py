@@ -91,7 +91,7 @@ class BnBProblem(OptProblem):
         cost = self.cost(sol)
         if self.cost_delta(self.best_cost, cost) > 0:
             self.best_cost = cost
-            self.best_solution = sol
+            self.best_solution = deepcopy(sol)
 
     def solve(self, iters_limit=1e6, print_iters=100, time_limit=3600,
               bnb_type=0):
