@@ -16,7 +16,7 @@ class SimAnnealProblem(OptProblem):
         # the best one sometimes and the best daily one other times.
         super().__init__()
         self.candidate = make_copy(self.best_solution)
-        self.current_cost = self.best_cost
+        self.current_cost = make_copy(self.best_cost)
 
     def next_candidate(self):
         ''' Switch to the next candidate.'''
@@ -91,11 +91,11 @@ class SimAnnealProblem(OptProblem):
 
     def update_candidate(self, candidate, cost):
         self.candidate = make_copy(candidate)
-        self.current_cost = cost
+        self.current_cost = make_copy(cost)
 
     def update_best(self, candidate, cost):
         self.best_solution = make_copy(candidate)
-        self.best_cost = cost
+        self.best_cost = make_copy(cost)
 
 
 def make_copy(candidate):

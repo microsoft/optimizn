@@ -31,7 +31,9 @@ class MultiArmedBandit(ContinuousTraining):
         self.init_pulls = init_pulls
         self.arm_pulls = [0] * self.n_arms
         self.est_exp_reward = [0] * self.n_arms
+        print(f'Performing {self.init_pulls} initial pulls...')
         self.run(self.init_pulls)
+        print('Completed initial pulls')
         super().__init__()
 
     def choose_arm(self):
@@ -77,7 +79,7 @@ class MultiArmedBandit(ContinuousTraining):
     def print_results(self):
         print(f'Arm pulls: {self.arm_pulls}')
         print('Estimated expected reward for each arm: '
-                + f'{self.est_exp_reward}\n')
+                + f'{self.est_exp_reward}')
 
     def run(self, n_iters=1e6, print_iters=100, time_limit=3600):
         start_time = time.time()
@@ -104,6 +106,6 @@ class MultiArmedBandit(ContinuousTraining):
             if time_elapsed >= time_limit:
                 print('Time limit reached, terminating algorithm')
                 self.print_results()
-                break
+                return
         print('Number of iterations reached, terminating algorithm')
         self.print_results()
