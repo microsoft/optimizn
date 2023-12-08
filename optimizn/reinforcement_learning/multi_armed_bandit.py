@@ -79,7 +79,7 @@ class MultiArmedBandit(ContinuousTraining):
     def print_results(self):
         print(f'Arm pulls: {self.arm_pulls}')
         print('Estimated expected reward for each arm: '
-                + f'{self.est_exp_reward}\n')
+                + f'{self.est_exp_reward}')
 
     def run(self, n_iters=1e6, print_iters=100, time_limit=3600):
         start_time = time.time()
