@@ -40,7 +40,7 @@ class MinPathCoverProblem1(BnBProblem):
         self._get_all_paths()
         super().__init__(params)
 
-    def get_candidate(self):
+    def get_initial_solution(self):
         return (np.ones(len(self.all_paths)), -1)
     
     def get_root(self):
@@ -198,7 +198,7 @@ class MinPathCoverProblem2(BnBProblem):
                         self.cov_dict[vert].add(path)
         super().__init__(params)
 
-    def get_candidate(self):
+    def get_initial_solution(self):
         return (np.zeros((0, 3)), np.array(self.all_paths),
                 min(self.vertices) - 1)
     

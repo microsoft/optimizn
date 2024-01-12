@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from copy import deepcopy
+import random
 from optimizn.combinatorial.branch_and_bound import BnBProblem
 
 
@@ -16,65 +16,21 @@ class TravelingSalesmanProblem(BnBProblem):
         self.sorted_dists.sort()
         super().__init__(params)
 
-    def _get_closest_city(self, city, visited):
-        # get the unvisited city closest to the one provided
-        min_city = None
-        min_dist = float('inf')
-        dists = self.input_graph.dists[city]
-        for i in range(len(dists)):
-            if i != city and i not in visited and dists[i] < min_dist:
-                min_city = i
-                min_dist = dists[i]
-        return min_city
-
-    def _complete_path(self, path):
-        '''
-        This function performs the nearest-neighbor approximation algorithm
-        for the traveling salesman problem, which is presented in the following
-        source.
-
-        Source:
-
-        (1)
-        Title: An Analysis of Several Heuristics for the Traveling Salesman
-        Problem
-        Authors: Daniel J. Rosenkrantz, Richard E. Stearns, and Philip M.
-        Lewis II
-        Journal: SIAM Journal on Computing
-        Volume: 6
-        Number: 3
-        DOI: 10.1137/0206041
-        URL: https://www.researchgate.net/publication/220616869_An_Analysis_of_Several_Heuristics_for_the_Traveling_Salesman_Problem
-        Date published: September 1977
-        Date accessed: 2021
-        '''
-
-        # complete the path greedily, iteratively adding the unvisited city
-        # closest to the last city in the accumulated path
-        visited = set(path)
-        complete_path = deepcopy(path)
-        while len(complete_path) != self.input_graph.dists.shape[0]:
-            if len(complete_path) == 0:
-                next_city = 0
-            else:
-                last_city_idx = 0 if len(complete_path) == 0 else\
-                    complete_path[-1]
-                next_city = self._get_closest_city(last_city_idx, visited)
-            visited.add(next_city)
-            complete_path.append(next_city)
-        return complete_path
-
-    def get_candidate(self):
-        # greedily assemble a path from scratch
-        return self._complete_path([])
+    def get_initial_solution(self):
+        # path of cities in increasing, numerical order
+        return list(range(self.input_graph.num_cities))
     
     def get_root(self):
         # return empty path
         return []
 
     def complete_solution(self, sol):
-        # greedily complete the path using the remaining/unvisited cities
-        return self._complete_path(sol)
+        # path completed by random ordering of unvisited cities
+        unvisited_cities = set(range(self.input_graph.num_cities)).difference(
+            set(sol))
+        unvisited_cities = list(unvisited_cities)
+        random.shuffle(unvisited_cities)
+        return sol + unvisited_cities
 
     def cost(self, sol):
         # sum of distances between adjacent cities in path, and from last

@@ -21,3 +21,16 @@ class CityGraph():
         for i in range(len(self.xs)):
             for j in range(i):
                 self.dists[i,j] = self.dists[j,i]
+
+    def __eq__(self, other):
+        if self.num_cities != other.num_cities:
+            return False
+        elif self.dists.shape != other.dists.shape:
+            return False
+        elif (self.dists != other.dists).any():
+            return False
+        return True
+
+    def __str__(self):
+        return f'City graph of {self.num_cities} cities, represented as an '\
+            + f'adjacency matrix:\n{self.dists}'

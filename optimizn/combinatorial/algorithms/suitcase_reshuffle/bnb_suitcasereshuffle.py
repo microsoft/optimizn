@@ -44,7 +44,7 @@ class SuitcaseReshuffleProblem(BnBProblem):
                 weight_counts[weight] += 1
         return weight_counts
 
-    def get_candidate(self):
+    def get_initial_solution(self):
         return (deepcopy(self.suitcases), -1)
     
     def get_root(self):

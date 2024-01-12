@@ -11,87 +11,47 @@ from optimizn.combinatorial.simulated_annealing import SimAnnealProblem
 class TravSalsmn(SimAnnealProblem):
     '''
     This simulated annealing implementation for the traveling salesman
-    problem is based on the simulated annealing implementation for the
-    traveling salesman problem presented in the following sources.
-
-    Sources:
+    problem is based on the following sources. The code presented in [2, 3] is
+    licensed under the MIT License. The original license texts are shown in the
+    NOTICE.md file.
         
-    (1)
-    Title: The Traveling Salesman with Simulated Annealing, R, and Shiny
-    Author: Todd W. Schneider
-    URL: https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/
-    Date published: October 1, 2014
-    Date accessed: January 8, 2023
-    
-    (2)
-    Title: toddwschneider/shiny-salesman
-    Author: Todd W. Schneider
-    URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
-    Date published: October 1, 2014
-    Date accessed: January 8, 2023
-    The code presented in this source is licensed under the MIT License.
-    The original license text is shown in the NOTICE.md file.
+    Sources:
+
+    [1] T. W. Schneider, "The traveling salesman with simulated annealing,
+    r, and shiny."
+    https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/,
+    September 2014. Online; accessed 8-January-2023.
+
+    [2] T. W. Schneider, "shiny-salesman/helpers.r."
+    https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R,
+    October 2014. Online; accessed 8-January-2023.
+
+    [3] F. Goulart, T. Frick, and Luan, "python-tsp/python_tsp/heuristics/
+    simulated_annealing.py."
+    https://github.com/fillipe-gsm/python-tsp/blob/master/python_tsp/heuristics/simulated_annealing.py.
+    Online; accessed 27-March-2023.
     '''
-    def __init__(self, params):
+    def __init__(self, params, alpha=0.99):
         self.params = params
         super().__init__()
-    
-    def _get_closest_city(self, city, visited):
-        # get the unvisited city closest to the one provided
-        min_city = None
-        min_dist = float('inf')
-        dists = self.params.dists[city]
-        for i in range(len(dists)):
-            if i != city and i not in visited and dists[i] < min_dist:
-                min_city = i
-                min_dist = dists[i]
-        return min_city
+        self.alpha = alpha
+        
+        # set initial temperature
+        cost_diffs = []
+        for _ in range(100):
+            new_path = self.next_candidate(self.candidate)
+            cost_diffs.append(self.cost(new_path) - self.best_cost)
+        self.temperature = -1 * abs(
+            sum(cost_diffs) / len(cost_diffs)) / np.log(0.5)
 
-    def _complete_path(self, path):
-        '''
-        This function performs the nearest-neighbor approximation algorithm
-        for the traveling salesman problem, which is presented in the following
-        source.
-
-        Source:
-
-        (1)
-        Title: An Analysis of Several Heuristics for the Traveling Salesman
-        Problem
-        Authors: Daniel J. Rosenkrantz, Richard E. Stearns, and Philip M.
-        Lewis II
-        Journal: SIAM Journal on Computing
-        Volume: 6
-        Number: 3
-        DOI: 10.1137/0206041
-        URL: https://www.researchgate.net/publication/220616869_An_Analysis_of_Several_Heuristics_for_the_Traveling_Salesman_Problem
-        Date published: September 1977
-        Date accessed: 2021
-        '''
-
-        # complete the path greedily, iteratively adding the unvisited city
-        # closest to the last city in the accmulated path
-        visited = set(path)
-        complete_path = deepcopy(path)
-        while len(complete_path) != self.params.dists.shape[0]:
-            if len(complete_path) == 0:
-                next_city = 0
-            else:
-                last_city_idx = 0 if len(complete_path) == 0 else\
-                    complete_path[-1]
-                next_city = self._get_closest_city(last_city_idx, visited)
-            visited.add(next_city)
-            complete_path.append(next_city)
-        return complete_path
-
-    def get_candidate(self):
+    def get_initial_solution(self):
         """
         A candidate is going to be an array
         representing the order of cities
         visited.
         """
-        # greedily assembled path of cities
-        return np.array(self._complete_path([]))
+        # path of cities in increasing, numerical order
+        return np.arange(self.params.num_cities)
 
     def reset_candidate(self):
         # random path of cities
@@ -113,6 +73,9 @@ class TravSalsmn(SimAnnealProblem):
         nu_candidate[swaps[0]] = to_swap[1]
         nu_candidate[swaps[1]] = to_swap[0]
         return nu_candidate
+    
+    def get_temperature(self, iters):
+        return self.temperature * self.alpha
 
 
 def dist_from_lat_long(lat1, long1, lat2, long2):

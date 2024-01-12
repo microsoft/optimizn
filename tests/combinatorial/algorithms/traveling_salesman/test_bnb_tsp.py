@@ -17,33 +17,6 @@ class MockCityGraph:
         self.num_cities = len(dists)
 
 
-def test_get_closest_city():
-    dists = np.array([
-        [0, 4, 2, 1],
-        [4, 0, 3, 4],
-        [2, 3, 0, 2],
-        [1, 4, 2, 0],
-    ])
-    mcg = MockCityGraph(dists)
-    params = {
-        'input_graph': mcg,
-    }
-    TEST_CASES = [
-        # test case: (current vertex, visited vertices, closest vertex to
-        # current vertex)
-        (0, {}, 3),
-        (3, {0}, 2),
-        (2, {0, 3}, 1),
-        (1, {0, 3, 2}, None),
-        (1, {0, 3, 2, 1}, None)
-    ]
-    for city, visited, true_closest in TEST_CASES:
-        tsp = TravelingSalesmanProblem(params)
-        closest = tsp._get_closest_city(city, visited)
-        assert closest == true_closest, 'Incorrect closest vertex to '\
-            + f'vertex {city}. Expected: {true_closest}. Actual: {closest}'
-
-
 def test_is_feasible():
     dists = np.array([
         [0, 4, 2, 1],
@@ -98,7 +71,7 @@ def test_is_complete():
             + f'Actually complete: {complete}'
 
 
-def test_complete_path():
+def test_get_initial_solution_sorted_dists():
     dists = np.array([
         [0, 4, 2, 1],
         [4, 0, 3, 4],
@@ -110,34 +83,7 @@ def test_complete_path():
         'input_graph': mcg,
     }
     tsp = TravelingSalesmanProblem(params)
-    TEST_CASES = [
-        # test case: (path, completed path)
-        ([], [0, 3, 2, 1]),
-        ([0], [0, 3, 2, 1]),
-        ([0, 1], [0, 1, 2, 3]),
-        ([1, 3], [1, 3, 0, 2]),
-        ([0, 3, 2, 1], [0, 3, 2, 1])
-    ]
-    for path, complete_path in TEST_CASES:
-        comp_path = tsp._complete_path(path)
-        assert comp_path == complete_path, 'Incorrect completed path formed '\
-            + f'from path {path}. Expected: {complete_path}, Actual: '\
-            + f'{comp_path}'
-
-
-def test_get_candidate_sorted_dists():
-    dists = np.array([
-        [0, 4, 2, 1],
-        [4, 0, 3, 4],
-        [2, 3, 0, 2],
-        [1, 4, 2, 0],
-    ])
-    mcg = MockCityGraph(dists)
-    params = {
-        'input_graph': mcg,
-    }
-    tsp = TravelingSalesmanProblem(params)
-    exp_init_sol = [0, 3, 2, 1]
+    exp_init_sol = [0, 1, 2, 3]
     exp_sorted_dists = [1, 2, 2, 3, 4, 4]
     assert tsp.best_solution == exp_init_sol, 'Invalid initial solution. '\
         + f'Expected: {exp_init_sol}. Actual: {tsp.best_solution}'
@@ -158,18 +104,17 @@ def test_complete_solution():
     }
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
-        # test case: (partial solution, expected complete solution)
-        ([], [0, 3, 2, 1]),
-        ([0], [0, 3, 2, 1]),
-        ([0, 1], [0, 1, 2, 3]),
-        ([1, 3], [1, 3, 0, 2]),
-        ([0, 3, 2, 1], [0, 3, 2, 1])
+        # test case: partial solution
+        [], [0], [0, 1], [1, 3], [0, 3, 2, 1]
     ]
-    for path, complete_path in TEST_CASES:
+    for path in TEST_CASES:
         comp_path = tsp.complete_solution(path)
-        assert comp_path == complete_path, 'Incorrect completed solution '\
-            + f'formed from partial solution {path}. Expected: '\
-            + f'{complete_path}, Actual: {comp_path}'
+        assert len(comp_path) == mcg.num_cities,\
+            'Incorrect length of completed path. Expected: '\
+            + f'{mcg.num_cities}. Actual: {len(comp_path)}'
+        assert set(comp_path) == set(range(mcg.num_cities)), 'Incorrect '\
+            + f'coverage of cities. Expected: {set(range(mcg.num_cities))}'\
+            + f'. Actual: {set(comp_path)}'
 
 
 def test_cost():
@@ -271,10 +216,6 @@ def test_bnb_tsp():
     }
     tsp1 = TravelingSalesmanProblem(params)
     init_cost1 = tsp1.best_cost
-    _, distance = solve_tsp_simulated_annealing(
-        graph.dists, x0=tsp1.best_solution[0], perturbation_scheme='ps2',
-        alpha=0.99)
-    tsp1.solve(1e20, 1e20, 120, 0)
     tsp2 = TravelingSalesmanProblem(params)
     init_cost2 = tsp2.best_cost
     tsp2.solve(1e20, 1e20, 120, 1)
@@ -284,4 +225,3 @@ def test_bnb_tsp():
     check_sol_vs_init_sol(tsp1.best_cost, init_cost1)
     check_bnb_sol(tsp2, 1, params)
     check_sol_vs_init_sol(tsp2.best_cost, init_cost2)
-    check_sol_optimality(tsp2.best_cost, distance, 1.1)

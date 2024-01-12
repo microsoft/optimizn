@@ -11,7 +11,7 @@ class OptProblem():
         ''' Initialize the problem '''
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
-        self.best_solution = self.get_candidate()
+        self.best_solution = self.get_initial_solution()
         self.best_cost = self.cost(self.best_solution)
         print(f'Initial solution: {self.best_solution}')
         print(f'Initial solution cost: {self.best_cost}')
@@ -22,8 +22,8 @@ class OptProblem():
                 + 'which is an object that contains the input parameters '
                 + 'to the problem class')
 
-    def get_candidate(self):
-        ''' Gets a feasible candidate.'''
+    def get_initial_solution(self):
+        ''' Gets the initial solution.'''
         raise Exception("Not implemented")
 
     def cost(self, sol):
@@ -36,8 +36,11 @@ class OptProblem():
     def persist(self):
         create_folders(self.name)
         existing_obj = load_latest_pckl("Data//" + self.name + "//DailyObj")
-        self.obj_changed = (existing_obj != self.params)
-        if self.obj_changed or existing_obj is None:
+        if existing_obj is None:
+            self.obj_changed = True
+        else:
+            self.obj_changed = (existing_obj != self.params)
+        if self.obj_changed:
             # Write the latest input object that has changed.
             f_name = "Data//" + self.name + "//DailyObj//" +\
                         str(self.init_secs) + ".obj"
@@ -53,7 +56,7 @@ class OptProblem():
 
         # Now check if the current best is better than the global best
         existing_best = load_latest_pckl("Data//" + self.name + "//GlobalOpt")
-        if existing_best is None or self.best_cost > existing_best.best_cost\
+        if existing_best is None or self.best_cost < existing_best.best_cost\
                 or self.obj_changed:
             f_name = "Data//" + self.name + "//GlobalOpt//" +\
                         str(self.init_secs) + ".obj"

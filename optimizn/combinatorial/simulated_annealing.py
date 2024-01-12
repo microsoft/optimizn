@@ -25,32 +25,38 @@ class SimAnnealProblem(OptProblem):
     def reset_candidate(self):
         '''
         Returns a new solution for when the candidate solution is reset.
-        Defaults to get_candidate but can be overridden if needed
+        Defaults to get_initial_solution but can be overridden if needed
         '''
-        return self.get_candidate()
+        return self.get_initial_solution()
+    
+    def get_temperature(self, iters):
+        '''
+        Calculates the temperature based on a given number of iterations.
+        Defaults to current_temperature
+        '''
+        return current_temperature(iters)
 
     def anneal(self, n_iter=100000, reset_p=1/10000, time_limit=3600):
         '''
-        This simulated annealing implementation is based on the code and
-        explanation of simulated annealing presented in the following sources.
+        This simulated annealing algorithm is based on the following
+        sources. The code presented in source [2] is licensed under the MIT
+        License. The original license text is shown in the NOTICE.md file.
 
         Sources:
 
-        (1)
-        Title: The Traveling Salesman with Simulated Annealing, R, and Shiny
-        Author: Todd W. Schneider
-        URL: https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/
-        Date published: October 1, 2014
-        Date accessed: January 8, 2023
-        
-        (2)
-        Title: toddwschneider/shiny-salesman
-        Author: Todd W. Schneider
-        URL: https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R
-        Date published: October 1, 2014
-        Date accessed: January 8, 2023
-        The code presented in this source is licensed under the MIT License.
-        The original license text is shown in the NOTICE.md file.
+        [1] T. W. Schneider, "The traveling salesman with simulated annealing,
+        r, and shiny."
+        https://toddwschneider.com/posts/traveling-salesman-with-simulated-annealing-r-and-shiny/,
+        September 2014. Online; accessed 8-January-2023.
+
+        [2] T. W. Schneider, "shiny-salesman/helpers.r."
+        https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R,
+        October 2014. Online; accessed 8-January-2023.
+
+        [3] R. A. Rutenbar, "Simulated annealing algorithms: An overview," IEEE
+        Circuits and Devices Magazine, vol. 5, pp. 19-26, January 1989.
+        https://www.cs.amherst.edu/~ccmcgeoch/cs34/papers/rutenbar.pdf. Online;
+        accessed 8-January-2024.
         '''
         reset = False
         j = -1
@@ -62,7 +68,7 @@ class SimAnnealProblem(OptProblem):
                 print('Best solution: ', self.best_cost)
                 break
             j = j + 1
-            temprature = current_temperature(j)
+            self.temperature = self.get_temperature(j)
             if i % 10000 == 0:
                 print("Iteration: " + str(i) + " Current best solution: "
                       + str(self.best_cost))
@@ -78,11 +84,10 @@ class SimAnnealProblem(OptProblem):
                 self.new_candidate = self.next_candidate(self.candidate)
                 self.new_cost = self.cost(self.new_candidate)
             cost_del = self.cost_delta(self.new_cost, self.current_cost)
-            eps = np.exp(cost_del / temprature)
+            eps = np.exp(-1 * cost_del / self.temperature)
 
-            if self.new_cost < self.current_cost or eps < uniform() or reset:
-                self.update_candidate(self.new_candidate,
-                                      self.new_cost)
+            if self.new_cost < self.current_cost or uniform() < eps or reset:
+                self.update_candidate(self.new_candidate, self.new_cost)
                 if reset:
                     reset = False
             if self.new_cost < self.best_cost:

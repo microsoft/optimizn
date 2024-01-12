@@ -52,7 +52,7 @@ class BinPackingProblem(BnBProblem):
         self.capacity = params.capacity
         super().__init__(params)
     
-    def get_candidate(self):
+    def get_initial_solution(self):
         return (self._pack_rem_items(dict(), -1), -1)
     
     def get_root(self):

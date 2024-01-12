@@ -27,7 +27,7 @@ class MinPathCover_NTG(SimAnnealProblem):
         self.name = "MinPathCover_NeuralTriGraph"
         super().__init__()
 
-    def get_candidate(self):
+    def get_initial_solution(self):
         """
         A candidate is going to be an array of
         arrays, where each array is a full path
@@ -71,7 +71,7 @@ class MinPathCover_NTG(SimAnnealProblem):
 
     def next_candidate(self, candidate, num_del_paths=1):
         if self.swtch == 0:
-            return self.get_candidate()
+            return self.get_initial_solution()
         else:
             return self.next_candidate_v2(candidate, num_del_paths)
 

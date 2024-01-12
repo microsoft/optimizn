@@ -12,7 +12,7 @@ class SuitCaseReshuffle(SimAnnealProblem):
 		self.name = "SuitcaseReshuffling"
 		super().__init__()
 
-	def get_candidate(self):
+	def get_initial_solution(self):
 		self.candidate = self.params.config
 		return self.candidate
 

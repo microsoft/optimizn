@@ -21,12 +21,12 @@ class BnBProblem(OptProblem):
     
     def get_root(self):
         '''
-        Produces the solution corresponding to the root node of the solution
-        space tree structure
+        Produces the solution corresponding to the root node of the problem
+        space tree
         '''
         raise NotImplementedError(
-            'Implement a function to get the solution corresponding to the '
-            + 'root node of the solution space tree structure')
+            'Implement a method to get the solution corresponding to the '
+            + 'root node of the problem space tree')
 
     def lbound(self, sol):
         '''
@@ -34,7 +34,7 @@ class BnBProblem(OptProblem):
         can be obtained from it through branching
         '''
         raise NotImplementedError(
-            'Implement a function to compute a lower bound on a feasible '
+            'Implement a method to compute a lower bound on a feasible '
             + 'solution')
 
     def branch(self, sol):
@@ -42,7 +42,7 @@ class BnBProblem(OptProblem):
         Generates other solutions from a feasible solution (branching)
         '''
         raise NotImplementedError(
-            'Implement a branching function to produce other solutions from a '
+            'Implement a branching method to produce other solutions from a '
             + 'feasible solution')
 
     def is_complete(self, sol):
@@ -51,7 +51,7 @@ class BnBProblem(OptProblem):
         problem)
         '''
         raise NotImplementedError(
-            'Implement a function to check if a solution is a complete '
+            'Implement a method to check if a solution is a complete '
             + 'solution (solves the optimization problem)')
 
     def is_feasible(self, sol):
@@ -61,7 +61,7 @@ class BnBProblem(OptProblem):
         solution)
         '''
         raise NotImplementedError(
-            'Implement a function to check if a solution is a feasible '
+            'Implement a method to check if a solution is a feasible '
             + 'solution (is within the constraints of the optimization '
             + 'problem, can be a complete solution or a partial solution)')
 
@@ -72,7 +72,7 @@ class BnBProblem(OptProblem):
         already observed (only needed for modified branch and bound algorithm)
         '''
         raise NotImplementedError(
-            'Implement a function to complete an incomplete solution')
+            'Implement a method to complete an incomplete solution')
 
     def _print_results(self, iters, print_iters, time_elapsed, force=False):
         if force or iters == 1 or iters % print_iters == 0:
@@ -83,7 +83,7 @@ class BnBProblem(OptProblem):
             print(f'Time elapsed (current run): {time_elapsed} seconds')
             print(f'Time elapsed (total): {self.total_time_elapsed} seconds')
             print(f'Best solution: {self.best_solution}')
-            print(f'Score: {self.best_cost}')
+            print(f'Cost: {self.best_cost}')
 
     def _update_best_solution(self, sol):
         # get cost of solution and update minimum cost and best solution
@@ -96,35 +96,23 @@ class BnBProblem(OptProblem):
     def solve(self, iters_limit=1e6, print_iters=100, time_limit=3600,
               bnb_type=0):
         '''
-        This library's branch and bound implementation is based on the
-        pseudocode and explanation of eager branch and bound presented in
-        source (1) and the demonstration of branch and bound shown in source
-        (2).
+        This branch and bound implementation is based on the following sources.
 
-        This function executes either the traditional (bnb_type=0) or modified
+        This method executes either the traditional (bnb_type=0) or modified
         (bnb_type=1) branch and bound algorithm. In traditional branch and
-        bound, feasible and partial solutions are not completed and are not
-        evaluated against the current best solution, while in modified branch
-        and bound, feasible and partial solutions are completed and evaluated
-        against the current best solution. This completion and evaluation of
-        feasible, partial solutions is based on the demonstration of branch
-        and bound shown in source (2).
+        bound, partial solutions are not completed and are not evaluated
+        against the current best solution, while in modified branch
+        and bound, they are.
 
         Sources:
 
-        (1)
-        Title: Branch and Bound Algorithms - Principles and Examples.
-        Author: Jens Clausen
-        URL: https://imada.sdu.dk/~jbj/heuristikker/TSPtext.pdf 
-        Date published: March 12, 1999
-        Date accessed: December 16, 2022
+        [1] J. Clausen, "Branch and bound algorithms - principles and
+        examples.." https://imada.sdu.dk/u/jbj/heuristikker/TSPtext.pdf,
+        March 1999. Online; accessed 16-December-2022.
 
-        (2) 
-        Title: 7.2 0/1 Knapsack using Branch and Bound
-        Author: Abdul Bari
-        URL: https://www.youtube.com/watch?v=yV1d-b_NeK8
-        Date published: February 26, 2018
-        Date accessed: December 16, 2022
+        [2] A. Bari, "7.2 0/1 knapsack using branch and bound."
+        https://www.youtube.com/watch?v=yV1d-b_NeK8, February 2018. Online;
+        accessed 16-December-2022.
         '''
         # initialization
         start = time.time()
