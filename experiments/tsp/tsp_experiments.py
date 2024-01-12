@@ -63,7 +63,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
         shutil.rmtree('Data/')
 
     # run simulated annealing 1
-    tsp_sa1 = TravSalsmn(city_graph)
+    tsp_sa1 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
     results['sa1_init_sol'] = tsp_sa1.best_solution
     results['sa1_init_sol_cost'] = tsp_sa1.best_cost
     tsp_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
@@ -72,7 +72,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa1_time'].append(e - s)
 
     # run simulated annealing 2
-    tsp_sa2 = TravSalsmn(city_graph)
+    tsp_sa2 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
     results['sa2_init_sol'] = tsp_sa2.best_solution
     results['sa2_init_sol_cost'] = tsp_sa2.best_cost
     s = time.time()

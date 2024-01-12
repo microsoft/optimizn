@@ -31,10 +31,10 @@ class TravSalsmn(SimAnnealProblem):
     https://github.com/fillipe-gsm/python-tsp/blob/master/python_tsp/heuristics/simulated_annealing.py.
     Online; accessed 27-March-2023.
     '''
-    def __init__(self, params, alpha=0.99):
+    def __init__(self, params, temp_reduce_factor=0.99):
         self.params = params
         super().__init__()
-        self.alpha = alpha
+        self.temp_reduce_factor = temp_reduce_factor
         
         # set initial temperature
         cost_diffs = []
@@ -75,7 +75,7 @@ class TravSalsmn(SimAnnealProblem):
         return nu_candidate
     
     def get_temperature(self, iters):
-        return self.temperature * self.alpha
+        return self.temperature * self.temp_reduce_factor
 
 
 def dist_from_lat_long(lat1, long1, lat2, long2):
