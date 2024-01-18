@@ -36,8 +36,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['trad_bnb2_time'] = []
     results['mod_bnb1'] = []
     results['mod_bnb1_time'] = []
-    results['mod_bnb1'] = []
-    results['mod_bnb1_time'] = []
+    results['mod_bnb2'] = []
+    results['mod_bnb2_time'] = []
     results['sa1_init_sol'] = None
     results['sa1_init_sol_cost'] = None
     results['sa2_init_sol'] = None
@@ -66,8 +66,10 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     tsp_sa1 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
     results['sa1_init_sol'] = tsp_sa1.best_solution
     results['sa1_init_sol_cost'] = tsp_sa1.best_cost
+    s = time.time()
     tsp_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                   time_limit=compute_time_mins * 60 * num_trials)
+    e = time.time()
     results['sa1'].append(tsp_sa1.best_cost)
     results['sa1_time'].append(e - s)
 
