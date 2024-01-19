@@ -13,8 +13,9 @@ class ContinuousTraining:
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
         if logger is None:
-            logger = get_logger(f'{self.name}_logger')
-        self.logger = logger
+            self.logger = get_logger(f'{self.name}_logger')
+        else:
+            self.logger = logger
 
     def persist(self):
         # set name attribute, check for params attribute 

@@ -13,8 +13,9 @@ class OptProblem():
         ''' Initialize the problem '''
         self.name = self.__class__.__name__
         if logger is None:
-            logger = get_logger(f'{self.name}_logger')
-        self.logger = logger
+            self.logger = get_logger(f'{self.name}_logger')
+        else:
+            self.logger = logger
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
         self.best_solution = self.get_candidate()
