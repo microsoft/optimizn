@@ -3,6 +3,7 @@
 
 import time
 from optimizn.continuous_training.continuous_training import ContinuousTraining
+import logging
 
 
 class MultiArmedBandit(ContinuousTraining):
@@ -26,15 +27,15 @@ class MultiArmedBandit(ContinuousTraining):
     Date published: 2019
     Date accessed: November 20, 2023
     '''
-    def __init__(self, n_arms, init_pulls):
+    def __init__(self, n_arms, init_pulls, logger=None):
         self.n_arms = n_arms
         self.init_pulls = init_pulls
         self.arm_pulls = [0] * self.n_arms
         self.est_exp_reward = [0] * self.n_arms
-        print(f'Performing {self.init_pulls} initial pulls...')
+        super().__init__(logger)
+        self.logger.info(f'Performing {self.init_pulls} initial pulls...')
         self.run(self.init_pulls)
-        print('Completed initial pulls')
-        super().__init__()
+        self.logger.info('Completed initial pulls')
 
     def choose_arm(self):
         '''
@@ -76,12 +77,12 @@ class MultiArmedBandit(ContinuousTraining):
         '''
         pass
 
-    def print_results(self):
-        print(f'Arm pulls: {self.arm_pulls}')
-        print('Estimated expected reward for each arm: '
+    def log_results(self):
+        self.logger.info(f'Arm pulls: {self.arm_pulls}')
+        self.logger.info('Estimated expected reward for each arm: '
                 + f'{self.est_exp_reward}')
 
-    def run(self, n_iters=1e6, print_iters=100, time_limit=3600):
+    def run(self, n_iters=1e6, log_iters=100, time_limit=3600):
         start_time = time.time()
         for iter in range(n_iters):
             # pull an arm to get some outcome
@@ -97,15 +98,15 @@ class MultiArmedBandit(ContinuousTraining):
             # process the result of the arm pull
             self.process_result(arm, outcome, reward)
 
-            if (iter + 1) % print_iters == 0:
-                print(f'Iteration: {iter + 1}')
-                self.print_results()
+            if (iter + 1) % log_iters == 0:
+                self.logger.info(f'Iteration: {iter + 1}')
+                self.log_results()
 
             # check if time limit has been exceeded
             time_elapsed = time.time() - start_time
             if time_elapsed >= time_limit:
-                print('Time limit reached, terminating algorithm')
-                self.print_results()
+                self.logger.info('Time limit reached, terminating algorithm')
+                self.log_results()
                 return
-        print('Number of iterations reached, terminating algorithm')
-        self.print_results()
+        self.logger.info('Number of iterations reached, terminating algorithm')
+        self.log_results()
