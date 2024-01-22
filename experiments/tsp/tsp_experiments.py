@@ -104,7 +104,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
     results['mod_bnb_init_sol'] = mod_tsp_bnb.best_solution
     results['mod_bnb_init_sol_cost'] = mod_tsp_bnb.best_cost
     s = time.time()
-    mod_tsp_bnb.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    mod_tsp_bnb.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                       time_limit=compute_time_mins * 60, bnb_type=1)
     e = time.time()
     mod_tsp_bnb.persist()
@@ -116,7 +116,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
         if mod_tsp_bnb is None:
             raise Exception('No saved instance for TSP branch and bound')
         s = time.time()
-        mod_tsp_bnb.solve(iters_limit=MAX_ITERS, print_iters=200,
+        mod_tsp_bnb.solve(iters_limit=MAX_ITERS, log_iters=200,
                           time_limit=compute_time_mins * 60)
         e = time.time()
         mod_tsp_bnb.persist()
@@ -132,7 +132,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
     results['trad_bnb_init_sol'] = trad_tsp_bnb.best_solution
     results['trad_bnb_init_sol_cost'] = trad_tsp_bnb.best_cost
     s = time.time()
-    trad_tsp_bnb.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    trad_tsp_bnb.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                        time_limit=compute_time_mins * 60, bnb_type=0)
     e = time.time()
     trad_tsp_bnb.persist()
@@ -144,7 +144,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3):
         if trad_tsp_bnb is None:
             raise Exception('No saved instance for TSP branch and bound')
         s = time.time()
-        trad_tsp_bnb.solve(iters_limit=MAX_ITERS, print_iters=200,
+        trad_tsp_bnb.solve(iters_limit=MAX_ITERS, log_iters=200,
                            time_limit=compute_time_mins * 60)
         e = time.time()
         trad_tsp_bnb.persist()

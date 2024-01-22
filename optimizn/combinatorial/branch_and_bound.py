@@ -8,12 +8,12 @@ from copy import deepcopy
 
 
 class BnBProblem(OptProblem):
-    def __init__(self, params):
+    def __init__(self, params, logger=None):
         self.params = params
         self.queue = PriorityQueue()
         self.total_iters = 0
         self.total_time_elapsed = 0
-        super().__init__()
+        super().__init__(logger)
         if not self.is_feasible(self.best_solution) or not self.is_complete(
                 self.best_solution):
             raise Exception('Initial solution is infeasible or incomplete: '
@@ -74,16 +74,18 @@ class BnBProblem(OptProblem):
         raise NotImplementedError(
             'Implement a function to complete an incomplete solution')
 
-    def _print_results(self, iters, print_iters, time_elapsed, force=False):
-        if force or iters == 1 or iters % print_iters == 0:
-            print(f'\nIterations (current run): {iters}')
-            print(f'Iterations (total): {self.total_iters}')
+    def _log_results(self, iters, log_iters, time_elapsed, force=False):
+        if force or iters == 1 or iters % log_iters == 0:
+            self.logger.info(f'\nIterations (current run): {iters}')
+            self.logger.info(f'Iterations (total): {self.total_iters}')
             queue = list(self.queue.queue)
-            print(f'Queue size: {len(queue)}')
-            print(f'Time elapsed (current run): {time_elapsed} seconds')
-            print(f'Time elapsed (total): {self.total_time_elapsed} seconds')
-            print(f'Best solution: {self.best_solution}')
-            print(f'Score: {self.best_cost}')
+            self.logger.info(f'Queue size: {len(queue)}')
+            self.logger.info(
+                f'Time elapsed (current run): {time_elapsed} seconds')
+            self.logger.info(
+                f'Time elapsed (total): {self.total_time_elapsed} seconds')
+            self.logger.info(f'Best solution: {self.best_solution}')
+            self.logger.info(f'Cost: {self.best_cost}')
 
     def _update_best_solution(self, sol):
         # get cost of solution and update minimum cost and best solution
@@ -93,7 +95,7 @@ class BnBProblem(OptProblem):
             self.best_cost = cost
             self.best_solution = deepcopy(sol)
 
-    def solve(self, iters_limit=1e6, print_iters=100, time_limit=3600,
+    def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
               bnb_type=0):
         '''
         This library's branch and bound implementation is based on the
@@ -183,17 +185,17 @@ class BnBProblem(OptProblem):
                         sol_count += 1
                         self.queue.put((lbound, sol_count, next_sol))
 
-            # print best solution and min cost, update iterations count and
+            # log best solution and min cost, update iterations count and
             # time elapsed
             iters += 1
             self.total_iters += 1
             time_elapsed = time.time() - start
             self.total_time_elapsed = original_total_time_elapsed +\
                 time_elapsed
-            self._print_results(iters, print_iters, time_elapsed)
+            self._log_results(iters, log_iters, time_elapsed)
 
         # return best solution and cost
-        self._print_results(iters, print_iters, time_elapsed, force=True)
+        self._log_results(iters, log_iters, time_elapsed, force=True)
         return self.best_solution, self.best_cost
 
     def persist(self):
