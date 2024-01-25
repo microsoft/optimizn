@@ -61,10 +61,10 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     for _ in range(num_trials - 1):
         class_name = tsp_sa2.__class__.__name__
         prior_params = load_latest_pckl(
-            path1=f'Data/{class_name}/DailyObj')
+            path1=f'Data/{class_name}/DailyObj', logger=tsp_sa2.logger)
         if tsp_sa2.params == prior_params:
             tsp_sa2 = load_latest_pckl(
-                path1=f'Data/{class_name}/DailyOpt')
+                path1=f'Data/{class_name}/DailyOpt', logger=tsp_sa2.logger)
             if tsp_sa2 is None:
                 raise Exception(
                     'No saved instance for TSP simulated annealing')
@@ -146,38 +146,38 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     # run modified branch and bound 1
     results['mod_bnb1'] = []
     results['mod_bnb1_time'] = []
-    mod_tsp_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['mod_bnb1_init_sol'] = mod_tsp_bnb1.best_solution
-    results['mod_bnb1_init_sol_cost'] = mod_tsp_bnb1.best_cost
+    mod_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
+    results['mod_bnb1_init_sol'] = mod_bnb1.best_solution
+    results['mod_bnb1_init_sol_cost'] = mod_bnb1.best_cost
     s = time.time()
-    mod_tsp_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+    mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                        time_limit=compute_time_mins * 60 * num_trials,
                        bnb_type=1)
     e = time.time()
-    results['mod_bnb1'].append(mod_tsp_bnb1.best_cost)
+    results['mod_bnb1'].append(mod_bnb1.best_cost)
     results['mod_bnb1_time'].append(e - s)
 
     # run modified branch and bound 2
     results['mod_bnb2'] = []
     results['mod_bnb2_time'] = []
-    mod_tsp_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['mod_bnb2_init_sol'] = mod_tsp_bnb2.best_solution
-    results['mod_bnb2_init_sol_cost'] = mod_tsp_bnb2.best_cost
+    mod_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
+    results['mod_bnb2_init_sol'] = mod_bnb2.best_solution
+    results['mod_bnb2_init_sol_cost'] = mod_bnb2.best_cost
     s = time.time()
-    mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+    mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                       time_limit=compute_time_mins * 60, bnb_type=1)
     e = time.time()
-    mod_tsp_bnb2.persist()
-    results['mod_bnb2'].append(mod_tsp_bnb2.best_cost)
+    mod_bnb2.persist()
+    results['mod_bnb2'].append(mod_bnb2.best_cost)
     results['mod_bnb2_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = mod_tsp_bnb2.__class__.__name__
+        class_name = mod_bnb2.__class__.__name__
         prior_params = load_latest_pckl(
-            path1=f'Data/{class_name}/DailyObj')
-        if mod_tsp_bnb2.params == prior_params:
-            mod_tsp_bnb2 = load_latest_pckl(
-                path1=f'Data/{class_name}/DailyOpt')
-            if mod_tsp_bnb2 is None:
+            path1=f'Data/{class_name}/DailyObj', logger=mod_bnb2.logger)
+        if mod_bnb2.params == prior_params:
+            mod_bnb2 = load_latest_pckl(
+                path1=f'Data/{class_name}/DailyOpt', logger=mod_bnb2.logger)
+            if mod_bnb2 is None:
                 raise Exception(
                     'No saved instance for TSP modified branch '
                     + 'and bound')
@@ -185,53 +185,53 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP modified branch and bound parameters have changed')
         s = time.time()
-        mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
+        mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
                           time_limit=compute_time_mins * 60)
         e = time.time()
-        mod_tsp_bnb2.persist()
-        results['mod_bnb2'].append(mod_tsp_bnb2.best_cost)
+        mod_bnb2.persist()
+        results['mod_bnb2'].append(mod_bnb2.best_cost)
         results['mod_bnb2_time'].append(e - s)
 
     # clear continuous training data from previous branch and bound runs
-    class_name = mod_tsp_bnb2.__class__.__name__
+    class_name = mod_bnb2.__class__.__name__
     if os.path.isdir(f'Data/{class_name}'):
         shutil.rmtree(path=f'Data/{class_name}')
 
     # run traditional branch and bound 1
     results['trad_bnb1'] = []
     results['trad_bnb1_time'] = []
-    trad_tsp_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['trad_bnb1_init_sol'] = trad_tsp_bnb1.best_solution
-    results['trad_bnb1_init_sol_cost'] = trad_tsp_bnb1.best_cost
+    trad_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
+    results['trad_bnb1_init_sol'] = trad_bnb1.best_solution
+    results['trad_bnb1_init_sol_cost'] = trad_bnb1.best_cost
     s = time.time()
-    trad_tsp_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
-                        time_limit=compute_time_mins * 60 * num_trials,
-                        bnb_type=0)
+    trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+                    time_limit=compute_time_mins * 60 * num_trials,
+                    bnb_type=0)
     e = time.time()
-    results['trad_bnb1'].append(trad_tsp_bnb1.best_cost)
+    results['trad_bnb1'].append(trad_bnb1.best_cost)
     results['trad_bnb1_time'].append(e - s)
 
     # run traditional branch and bound 2
     results['trad_bnb2'] = []
     results['trad_bnb2_time'] = []
-    trad_tsp_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['trad_bnb2_init_sol'] = trad_tsp_bnb2.best_solution
-    results['trad_bnb2_init_sol_cost'] = trad_tsp_bnb2.best_cost
+    trad_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
+    results['trad_bnb2_init_sol'] = trad_bnb2.best_solution
+    results['trad_bnb2_init_sol_cost'] = trad_bnb2.best_cost
     s = time.time()
-    trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
-                       time_limit=compute_time_mins * 60, bnb_type=0)
+    trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+                    time_limit=compute_time_mins * 60, bnb_type=0)
     e = time.time()
-    trad_tsp_bnb2.persist()
-    results['trad_bnb2'].append(trad_tsp_bnb2.best_cost)
+    trad_bnb2.persist()
+    results['trad_bnb2'].append(trad_bnb2.best_cost)
     results['trad_bnb2_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = trad_tsp_bnb2.__class__.__name__
+        class_name = trad_bnb2.__class__.__name__
         prior_params = load_latest_pckl(
-            path1=f'Data/{class_name}/DailyObj')
-        if trad_tsp_bnb2.params == prior_params:
-            trad_tsp_bnb2 = load_latest_pckl(
-                path1=f'Data/{class_name}/DailyOpt')
-            if trad_tsp_bnb2 == None:
+            path1=f'Data/{class_name}/DailyObj', logger=trad_bnb2.logger)
+        if trad_bnb2.params == prior_params:
+            trad_bnb2 = load_latest_pckl(
+                path1=f'Data/{class_name}/DailyOpt', logger=trad_bnb2.logger)
+            if trad_bnb2 == None:
                 raise Exception(
                     'No saved instance for TSP traditional branch '
                     + 'and bound')
@@ -239,11 +239,11 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP traditional branch and bound parameters have changed')
         s = time.time()
-        trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
-                           time_limit=compute_time_mins * 60)
+        trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
+                        time_limit=compute_time_mins * 60)
         e = time.time()
-        trad_tsp_bnb2.persist()
-        results['trad_bnb2'].append(trad_tsp_bnb2.best_cost)
+        trad_bnb2.persist()
+        results['trad_bnb2'].append(trad_bnb2.best_cost)
         results['trad_bnb2_time'].append(e - s)
     
     # run traditional branch and bound 3
