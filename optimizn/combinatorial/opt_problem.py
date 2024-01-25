@@ -4,7 +4,6 @@
 import pickle
 import os
 from datetime import datetime
-import logging
 from optimizn.utils import get_logger
 
 
@@ -97,8 +96,7 @@ def load_latest_pckl(path1="Data/DailyObj", logger=None):
         filepath = path1 + "//" + latest_file
         if os.path.getsize(filepath) == 0:
             if logger is None:
-                logger = logging.getLogger('optimizn_logger')
-                logger.setLevel(logging.INFO)
+                logger = get_logger('optimizn_logger')
             logger.info('File located at', filepath, 'is empty')
         else:
             filehandler = open(filepath, 'rb')
