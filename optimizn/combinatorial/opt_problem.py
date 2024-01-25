@@ -18,7 +18,7 @@ class OptProblem():
             self.logger = logger
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
-        self.best_solution = self.get_candidate()
+        self.best_solution = self.get_initial_solution()
         self.best_cost = self.cost(self.best_solution)
         self.logger.info(f'Initial solution: {self.best_solution}')
         self.logger.info(f'Initial solution cost: {self.best_cost}')
@@ -28,8 +28,8 @@ class OptProblem():
                 + 'which is an object that contains the input parameters '
                 + 'to the problem class')
 
-    def get_candidate(self):
-        ''' Gets a feasible candidate.'''
+    def get_initial_solution(self):
+        ''' Gets the initial solution.'''
         raise Exception("Not implemented")
 
     def cost(self, sol):

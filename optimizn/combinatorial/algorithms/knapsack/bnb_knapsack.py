@@ -54,7 +54,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
         self.sorted_vw_ratios.reverse()
         super().__init__(params)
 
-    def get_candidate(self):
+    def get_initial_solution(self):
         return self.complete_solution([])
     
     def get_root(self):
