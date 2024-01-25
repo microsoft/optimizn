@@ -4,18 +4,24 @@
 import pickle
 import os
 from datetime import datetime
+import logging
+from optimizn.utils import get_logger
 
 
 class OptProblem():
-    def __init__(self):
+    def __init__(self, logger=None):
         ''' Initialize the problem '''
+        self.name = self.__class__.__name__
+        if logger is None:
+            self.logger = get_logger(f'{self.name}_logger')
+        else:
+            self.logger = logger
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
         self.best_solution = self.get_initial_solution()
         self.best_cost = self.cost(self.best_solution)
-        print(f'Initial solution: {self.best_solution}')
-        print(f'Initial solution cost: {self.best_cost}')
-        self.name = self.__class__.__name__
+        self.logger.info(f'Initial solution: {self.best_solution}')
+        self.logger.info(f'Initial solution cost: {self.best_cost}')
         if not hasattr(self, 'params'):
             raise Exception(
                 'All problem class instances must have a "params" attribute, '
@@ -35,7 +41,8 @@ class OptProblem():
 
     def persist(self):
         create_folders(self.name)
-        existing_obj = load_latest_pckl("Data//" + self.name + "//DailyObj")
+        existing_obj = load_latest_pckl(
+            "Data//" + self.name + "//DailyObj", self.logger)
         if existing_obj is None:
             self.obj_changed = True
         else:
@@ -46,23 +53,24 @@ class OptProblem():
                         str(self.init_secs) + ".obj"
             file1 = open(f_name, 'wb')
             pickle.dump(self.params, file1)
-            print("Wrote to DailyObj")
+            self.logger.info("Wrote to DailyObj")
         # Write the optimization object.
         f_name = "Data//" + self.name + "//DailyOpt//" + str(self.init_secs)\
             + ".obj"
         file1 = open(f_name, 'wb')
         pickle.dump(self, file1)
-        print("Wrote to DailyOpt")
+        self.logger.info("Wrote to DailyOpt")
 
         # Now check if the current best is better than the global best
-        existing_best = load_latest_pckl("Data//" + self.name + "//GlobalOpt")
+        existing_best = load_latest_pckl(
+            "Data//" + self.name + "//GlobalOpt", self.logger)
         if existing_best is None or self.best_cost < existing_best.best_cost\
                 or self.obj_changed:
             f_name = "Data//" + self.name + "//GlobalOpt//" +\
                         str(self.init_secs) + ".obj"
             file1 = open(f_name, 'wb')
             pickle.dump(self, file1)
-            print("Wrote to GlobalOpt")
+            self.logger.info("Wrote to GlobalOpt")
 
 
 def create_folders(name):
@@ -78,7 +86,7 @@ def create_folders(name):
         os.mkdir("Data//" + name + "//GlobalOpt//")
 
 
-def load_latest_pckl(path1="Data/DailyObj"):
+def load_latest_pckl(path1="Data/DailyObj", logger=None):
     if not os.path.exists(path1):
         return None
     msh_files = os.listdir(path1)
@@ -88,7 +96,10 @@ def load_latest_pckl(path1="Data/DailyObj"):
         latest_file = msh_files[len(msh_files)-1]
         filepath = path1 + "//" + latest_file
         if os.path.getsize(filepath) == 0:
-            print('File located at', filepath, 'is empty')
+            if logger is None:
+                logger = logging.getLogger('optimizn_logger')
+                logger.setLevel(logging.INFO)
+            logger.info('File located at', filepath, 'is empty')
         else:
             filehandler = open(filepath, 'rb')
             existing_obj = pickle.load(filehandler)

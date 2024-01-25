@@ -10,11 +10,11 @@ import time
 
 
 class SimAnnealProblem(OptProblem):
-    def __init__(self):
+    def __init__(self, logger=None):
         ''' Initialize the problem '''
         # Instead of always stopping at a random solution, pick
         # the best one sometimes and the best daily one other times.
-        super().__init__()
+        super().__init__(logger)
         self.candidate = make_copy(self.best_solution)
         self.current_cost = make_copy(self.best_cost)
 
@@ -64,20 +64,21 @@ class SimAnnealProblem(OptProblem):
         for i in range(n_iter):
             # check if time limit exceeded
             if time.time() - start > time_limit:
-                print('Time limit exceeded, terminating algorithm')
-                print('Best solution: ', self.best_cost)
+                self.logger.info('Time limit exceeded, terminating algorithm')
+                self.logger.info('Best solution: ' + str(self.best_cost))
                 break
             j = j + 1
             self.temperature = self.get_temperature(j)
             if i % 10000 == 0:
-                print("Iteration: " + str(i) + " Current best solution: "
-                      + str(self.best_cost))
+                self.logger.info(
+                    "Iteration: " + str(i) + " Current best solution: "
+                    + str(self.best_cost))
             # eps = 0.3 * e**(-i/n_iter)
             if np.random.uniform() < reset_p:
-                print("Resetting candidate solution.")
+                self.logger.info("Resetting candidate solution.")
                 self.new_candidate = self.reset_candidate()
                 self.new_cost = self.cost(self.new_candidate)
-                print("with cost: " + str(self.new_cost))
+                self.logger.info("with cost: " + str(self.new_cost))
                 j = 0
                 reset = True
             else:
@@ -92,7 +93,7 @@ class SimAnnealProblem(OptProblem):
                     reset = False
             if self.new_cost < self.best_cost:
                 self.update_best(self.new_candidate, self.new_cost)
-                print("Best cost updated to:" + str(self.new_cost))
+                self.logger.info("Best cost updated to:" + str(self.new_cost))
 
     def update_candidate(self, candidate, cost):
         self.candidate = make_copy(candidate)

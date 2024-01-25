@@ -8,10 +8,12 @@ from optimizn.combinatorial.algorithms.traveling_salesman.sim_anneal_tsp\
 from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp\
     import TravelingSalesmanProblem
 from python_tsp.heuristics import solve_tsp_simulated_annealing
+from experiments.tsp.tsp_experiments_utils import run_python_tsp_bnb
 from optimizn.combinatorial.opt_problem import load_latest_pckl
 import time
 import shutil
 import os
+import multiprocessing
 
 
 def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
@@ -22,38 +24,6 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
 
     # for collecting results
     results = dict()
-    results['sa1'] = []
-    results['sa1_time'] = []
-    results['sa2'] = []
-    results['sa2_time'] = []
-    results['sa3'] = []
-    results['sa3_time'] = []
-    results['sa4'] = []
-    results['sa4_time'] = []
-    results['trad_bnb1'] = []
-    results['trad_bnb1_time'] = []
-    results['trad_bnb2'] = []
-    results['trad_bnb2_time'] = []
-    results['mod_bnb1'] = []
-    results['mod_bnb1_time'] = []
-    results['mod_bnb2'] = []
-    results['mod_bnb2_time'] = []
-    results['sa1_init_sol'] = None
-    results['sa1_init_sol_cost'] = None
-    results['sa2_init_sol'] = None
-    results['sa2_init_sol_cost'] = None
-    results['sa3_init_sol'] = None
-    results['sa3_init_sol_cost'] = None
-    results['sa4_init_sol'] = None
-    results['sa4_init_sol_cost'] = None
-    results['trad_bnb1_init_sol'] = None
-    results['trad_bnb1_init_sol_cost'] = None
-    results['trad_bnb2_init_sol'] = None
-    results['trad_bnb2_init_sol_cost'] = None
-    results['mod_bnb1_init_sol'] = None
-    results['mod_bnb1_init_sol_cost'] = None
-    results['mod_bnb2_init_sol'] = None
-    results['mod_bnb2_init_sol_cost'] = None
 
     # create traveling salesman problem parameters
     city_graph = CityGraph(num_cities)
@@ -63,6 +33,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
         shutil.rmtree('Data/')
 
     # run simulated annealing 1
+    results['sa1'] = []
+    results['sa1_time'] = []
     tsp_sa1 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
     results['sa1_init_sol'] = tsp_sa1.best_solution
     results['sa1_init_sol_cost'] = tsp_sa1.best_cost
@@ -74,6 +46,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa1_time'].append(e - s)
 
     # run simulated annealing 2
+    results['sa2'] = []
+    results['sa2_time'] = []
     tsp_sa2 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
     results['sa2_init_sol'] = tsp_sa2.best_solution
     results['sa2_init_sol_cost'] = tsp_sa2.best_cost
@@ -105,6 +79,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
         results['sa2_time'].append(e - s)
 
     # run simulated annealing 3
+    results['sa3'] = []
+    results['sa3_time'] = []
     opt_permutation = list(range(city_graph.num_cities))
     opt_dist = 0
     for i in range(1, len(opt_permutation)):
@@ -115,7 +91,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa3_init_sol_cost'] = opt_dist
     s = time.time()
     e = time.time()
-    while (e - s) < (compute_time_mins * 60):
+    while (e - s) < (compute_time_mins * 60 * num_trials):
         permutation, distance = solve_tsp_simulated_annealing(
             city_graph.dists,
             max_processing_time=(
@@ -129,6 +105,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa3_time'].append(e - s)
 
     # run simulated annealing 4
+    results['sa4'] = []
+    results['sa4_time'] = []
     opt_permutation = list(range(city_graph.num_cities))
     opt_dist = 0
     for i in range(1, len(opt_permutation)):
@@ -166,11 +144,13 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
         results['sa4_time'].append(e - s)
 
     # run modified branch and bound 1
+    results['mod_bnb1'] = []
+    results['mod_bnb1_time'] = []
     mod_tsp_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
     results['mod_bnb1_init_sol'] = mod_tsp_bnb1.best_solution
     results['mod_bnb1_init_sol_cost'] = mod_tsp_bnb1.best_cost
     s = time.time()
-    mod_tsp_bnb1.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    mod_tsp_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                        time_limit=compute_time_mins * 60 * num_trials,
                        bnb_type=1)
     e = time.time()
@@ -178,11 +158,13 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['mod_bnb1_time'].append(e - s)
 
     # run modified branch and bound 2
+    results['mod_bnb2'] = []
+    results['mod_bnb2_time'] = []
     mod_tsp_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
     results['mod_bnb2_init_sol'] = mod_tsp_bnb2.best_solution
     results['mod_bnb2_init_sol_cost'] = mod_tsp_bnb2.best_cost
     s = time.time()
-    mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                       time_limit=compute_time_mins * 60, bnb_type=1)
     e = time.time()
     mod_tsp_bnb2.persist()
@@ -203,7 +185,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP modified branch and bound parameters have changed')
         s = time.time()
-        mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, print_iters=200,
+        mod_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
                           time_limit=compute_time_mins * 60)
         e = time.time()
         mod_tsp_bnb2.persist()
@@ -216,11 +198,13 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
         shutil.rmtree(path=f'Data/{class_name}')
 
     # run traditional branch and bound 1
+    results['trad_bnb1'] = []
+    results['trad_bnb1_time'] = []
     trad_tsp_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
     results['trad_bnb1_init_sol'] = trad_tsp_bnb1.best_solution
     results['trad_bnb1_init_sol_cost'] = trad_tsp_bnb1.best_cost
     s = time.time()
-    trad_tsp_bnb1.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    trad_tsp_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                         time_limit=compute_time_mins * 60 * num_trials,
                         bnb_type=0)
     e = time.time()
@@ -228,11 +212,13 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['trad_bnb1_time'].append(e - s)
 
     # run traditional branch and bound 2
+    results['trad_bnb2'] = []
+    results['trad_bnb2_time'] = []
     trad_tsp_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
     results['trad_bnb2_init_sol'] = trad_tsp_bnb2.best_solution
     results['trad_bnb2_init_sol_cost'] = trad_tsp_bnb2.best_cost
     s = time.time()
-    trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, print_iters=MAX_ITERS,
+    trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
                        time_limit=compute_time_mins * 60, bnb_type=0)
     e = time.time()
     trad_tsp_bnb2.persist()
@@ -253,12 +239,39 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP traditional branch and bound parameters have changed')
         s = time.time()
-        trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, print_iters=200,
+        trad_tsp_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
                            time_limit=compute_time_mins * 60)
         e = time.time()
         trad_tsp_bnb2.persist()
         results['trad_bnb2'].append(trad_tsp_bnb2.best_cost)
         results['trad_bnb2_time'].append(e - s)
+    
+    # run traditional branch and bound 3
+    results['trad_bnb3'] = []
+    results['trad_bnb3_time'] = []
+    init_permutation = list(range(city_graph.num_cities))
+    init_dist = 0
+    for i in range(1, len(init_permutation)):
+        init_dist += city_graph.dists[init_permutation[i], init_permutation[i-1]]
+    init_dist += city_graph.dists[
+        init_permutation[0], init_permutation[len(init_permutation) - 1]]
+    results['trad_bnb3_init_sol'] = init_permutation
+    results['trad_bnb3_init_sol_cost'] = init_dist
+    q = multiprocessing.Queue()
+    p = multiprocessing.Process(
+        target=run_python_tsp_bnb, args=(q, city_graph.dists))
+    s = time.time()
+    p.start()
+    p.join(compute_time_mins * 60 * num_trials)
+    if p.is_alive():
+        p.terminate()
+        e = time.time()
+        results['trad_bnb3'].append(init_dist)
+    else:
+        e = time.time()
+        opt_dist = q.get()
+        results['trad_bnb3'].append(opt_dist)
+    results['trad_bnb3_time'].append(e - s)
 
     # return results
     return results
