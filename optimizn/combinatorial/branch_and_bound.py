@@ -76,7 +76,7 @@ class BnBProblem(OptProblem):
 
     def _log_results(self, iters, log_iters, time_elapsed, force=False):
         if force or iters == 1 or iters % log_iters == 0:
-            self.logger.info(f'\nIterations (current run): {iters}')
+            self.logger.info(f'Iterations (current run): {iters}')
             self.logger.info(f'Iterations (total): {self.total_iters}')
             queue = list(self.queue.queue)
             self.logger.info(f'Queue size: {len(queue)}')
@@ -85,7 +85,7 @@ class BnBProblem(OptProblem):
             self.logger.info(
                 f'Time elapsed (total): {self.total_time_elapsed} seconds')
             self.logger.info(f'Best solution: {self.best_solution}')
-            self.logger.info(f'Cost: {self.best_cost}')
+            self.logger.info(f'Best solution cost: {self.best_cost}')
 
     def _update_best_solution(self, sol):
         # get cost of solution and update minimum cost and best solution
