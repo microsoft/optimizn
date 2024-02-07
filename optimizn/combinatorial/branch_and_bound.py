@@ -88,12 +88,15 @@ class BnBProblem(OptProblem):
             self.logger.info(f'Best solution cost: {self.best_cost}')
 
     def _update_best_solution(self, sol):
-        # get cost of solution and update minimum cost and best solution
-        # if needed
+        # get cost of solution and update best solution and cost if needed
         cost = self.cost(sol)
         if self.cost_delta(self.best_cost, cost) > 0:
             self.best_cost = cost
             self.best_solution = deepcopy(sol)
+            self.logger.info(
+                f'Updated best solution to: {self.best_solution}')
+            self.logger.info(
+                f'Updated best solution cost to: {self.best_cost}')
 
     def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
               bnb_type=0):

@@ -22,6 +22,9 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     MAX_ITERS = int(1e20)  # very high bound on iterations
     # since algorithms should use up all compute time
 
+    # specify number of iterations for logging
+    LOG_ITERS = int(1e7)
+
     # for collecting results
     results = dict()
 
@@ -40,7 +43,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa1_init_sol_cost'] = tsp_sa1.best_cost
     s = time.time()
     tsp_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
-                  time_limit=compute_time_mins * 60 * num_trials)
+                   time_limit=compute_time_mins * 60 * num_trials,
+                   log_iters=LOG_ITERS)
     e = time.time()
     results['sa1'].append(tsp_sa1.best_cost)
     results['sa1_time'].append(e - s)
@@ -53,7 +57,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['sa2_init_sol_cost'] = tsp_sa2.best_cost
     s = time.time()
     tsp_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
-                  time_limit=compute_time_mins * 60)
+                   time_limit=compute_time_mins * 60, log_iters=LOG_ITERS)
     e = time.time()
     tsp_sa2.persist()
     results['sa2'].append(tsp_sa2.best_cost)
@@ -72,7 +76,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception('TSP simulated annealing parameters have changed')
         s = time.time()
         tsp_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
-                      time_limit=compute_time_mins * 60)
+                       time_limit=compute_time_mins * 60,
+                       log_iters=LOG_ITERS)
         e = time.time()
         tsp_sa2.persist()
         results['sa2'].append(tsp_sa2.best_cost)
@@ -150,9 +155,9 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['mod_bnb1_init_sol'] = mod_bnb1.best_solution
     results['mod_bnb1_init_sol_cost'] = mod_bnb1.best_cost
     s = time.time()
-    mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
-                       time_limit=compute_time_mins * 60 * num_trials,
-                       bnb_type=1)
+    mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
+                   time_limit=compute_time_mins * 60 * num_trials,
+                   bnb_type=1)
     e = time.time()
     results['mod_bnb1'].append(mod_bnb1.best_cost)
     results['mod_bnb1_time'].append(e - s)
@@ -164,8 +169,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['mod_bnb2_init_sol'] = mod_bnb2.best_solution
     results['mod_bnb2_init_sol_cost'] = mod_bnb2.best_cost
     s = time.time()
-    mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
-                      time_limit=compute_time_mins * 60, bnb_type=1)
+    mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
+                   time_limit=compute_time_mins * 60, bnb_type=1)
     e = time.time()
     mod_bnb2.persist()
     results['mod_bnb2'].append(mod_bnb2.best_cost)
@@ -185,8 +190,8 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP modified branch and bound parameters have changed')
         s = time.time()
-        mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
-                          time_limit=compute_time_mins * 60)
+        mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
+                       time_limit=compute_time_mins * 60)
         e = time.time()
         mod_bnb2.persist()
         results['mod_bnb2'].append(mod_bnb2.best_cost)
@@ -204,7 +209,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['trad_bnb1_init_sol'] = trad_bnb1.best_solution
     results['trad_bnb1_init_sol_cost'] = trad_bnb1.best_cost
     s = time.time()
-    trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+    trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60 * num_trials,
                     bnb_type=0)
     e = time.time()
@@ -218,7 +223,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
     results['trad_bnb2_init_sol'] = trad_bnb2.best_solution
     results['trad_bnb2_init_sol_cost'] = trad_bnb2.best_cost
     s = time.time()
-    trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=MAX_ITERS,
+    trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60, bnb_type=0)
     e = time.time()
     trad_bnb2.persist()
@@ -239,7 +244,7 @@ def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
             raise Exception(
                 'TSP traditional branch and bound parameters have changed')
         s = time.time()
-        trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=200,
+        trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                         time_limit=compute_time_mins * 60)
         e = time.time()
         trad_bnb2.persist()

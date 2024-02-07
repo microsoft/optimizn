@@ -36,7 +36,8 @@ class SimAnnealProblem(OptProblem):
         '''
         return current_temperature(iters)
 
-    def anneal(self, n_iter=100000, reset_p=1/10000, time_limit=3600):
+    def anneal(self, n_iter=100000, reset_p=1/10000, time_limit=3600,
+               log_iters=10000):
         '''
         This simulated annealing algorithm is based on the following
         sources. The code presented in source [2] is licensed under the MIT
@@ -69,7 +70,7 @@ class SimAnnealProblem(OptProblem):
                 break
             j = j + 1
             self.temperature = self.get_temperature(j)
-            if i % 10000 == 0:
+            if i % log_iters == 0:
                 self.logger.info(
                     "Iteration: " + str(i) + " Current best solution: "
                     + str(self.best_cost))
