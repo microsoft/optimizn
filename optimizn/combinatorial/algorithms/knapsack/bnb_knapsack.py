@@ -95,10 +95,10 @@ class ZeroOneKnapsackProblem(BnBProblem):
             new_sols.append(deepcopy(sol) + [val])
         return new_sols
 
-    def is_feasible(self, sol):
-        # check that array is not longer than the number of weights/values
-        check_length1 = len(sol) <= len(self.weights)
-        check_length2 = len(sol) <= len(self.values)
+    def is_valid(self, sol):
+        # check that array length is the same as the number of weights/values
+        check_length1 = len(sol) == len(self.weights)
+        check_length2 = len(sol) == len(self.values)
         check_length = check_length1 and check_length2
 
         # check that the only values in the array are 0 and 1
@@ -110,14 +110,6 @@ class ZeroOneKnapsackProblem(BnBProblem):
             self.weights[:len(sol)])) <= self.capacity
 
         return check_length and check_values and check_weight
-
-    def is_complete(self, sol):
-        # check that array length is the same as the number of weights/values
-        check_length1 = len(sol) == len(self.weights)
-        check_length2 = len(sol) == len(self.values)
-        check_length = check_length1 and check_length2
-
-        return check_length
 
     def complete_solution(self, sol):
         # greedily add other items to array

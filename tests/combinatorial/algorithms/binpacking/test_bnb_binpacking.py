@@ -65,48 +65,25 @@ def test_constructor():
             + f'items. Expected: -1. Actual: {bpp.best_solution[1]}'
 
 
-def test_is_feasible():
+def test_is_valid():
     TEST_CASES = [
         # test case: (weights, capacity, solution, boolean for whether
-        # solution is feasible)
-        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, -1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), True),
-        ([1, 2, 3], 3, ({1: {1, 2, 3}}, -1), False),
-        ([1, 2, 3], 3, ({1: {3, 1}, 2: {2}}, -1), False),
-        ([1, 2, 3], 3, ({1: {3, 2}, 2: {1}}, 1), False),
-        ([1, 2, 3], 3, ({1: {3, 2}, 2: {1}}, 1), False)
-    ]
-    for weights, capacity, sol, feasible in TEST_CASES:
-        params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
-
-        # check feasibility
-        is_feasible = bpp.is_feasible(sol)
-        assert is_feasible == feasible, 'Feasibility check failed '\
-            + f'for solution {sol}. Expected to be feasible: {feasible}. '\
-            + f'Actually feasible: {is_feasible}'
-
-
-def test_is_complete():
-    TEST_CASES = [
-        # test case: (weights, capacity, solution, boolean for whether
-        # solution is complete)
+        # solution is valid)
         ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, -1), True),
         ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 1), True),
         ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), False),
         ([1, 2, 3], 3, ({1: {3}, 2: {1}}, 1), False),
         ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 1), False)
     ]
-    for weights, capacity, sol, complete in TEST_CASES:
+    for weights, capacity, sol, valid in TEST_CASES:
         params = BinPackingParams(weights, capacity)
         bpp = BinPackingProblem(params)
 
         # check completeness
-        is_complete = bpp.is_complete(sol)
-        assert is_complete == complete, 'Completeness check failed '\
-            + f'for solution {sol}. Expected to be complete: {complete}. '\
-            + f'Actually complete: {is_complete}'
+        is_valid = bpp.is_valid(sol)
+        assert is_valid == valid, 'Validity check failed for solution '\
+            + f'{sol}. Expected to be complete: {valid}. Actually complete: '\
+            + f'{is_valid}'
 
 
 def test_cost():

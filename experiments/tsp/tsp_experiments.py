@@ -12,6 +12,7 @@ from optimizn.combinatorial.opt_problem import load_latest_pckl
 import time
 import shutil
 import os
+import pickle
 
 
 # specify maximum number of iterations
@@ -26,6 +27,31 @@ def _clear_cont_train_data(opt_prob_obj):
     # clear continuous training data from previous runs
     if os.path.isdir(f'Data/{opt_prob_obj.name}'):
         shutil.rmtree(path=f'Data/{opt_prob_obj.name}')
+
+
+# function to get experiment graph and results dictionary
+def get_exp_data(exp_num, num_cities):
+    # create/load experiment graph
+    if os.path.isfile(f'exp{exp_num}_city_graph.obj'):
+        exp_city_graph = pickle.load(
+            open(f'exp{exp_num}_city_graph.obj', 'rb'))
+    else:
+        exp_city_graph = CityGraph(num_cities)
+        pickle.dump(
+            exp_city_graph, open(f'exp{exp_num}_city_graph.obj', 'wb'))
+
+    # create/load experiment 1 results dictionary
+    if os.path.isfile(f'exp{exp_num}_results.obj'):
+        exp_results = pickle.load(
+            open(f'exp{exp_num}_results.obj', 'rb'))
+    else:
+        exp_results = dict()
+    return exp_city_graph, exp_results
+
+
+# function to save experiment results dictionary
+def save_exp_results(exp_num, exp_results):
+    pickle.dump(exp_results, open(f'exp{exp_num}_results.obj', 'wb'))
 
 
 def run_sa1(city_graph, results, compute_time_mins=1, num_trials=3, reset_p=0):

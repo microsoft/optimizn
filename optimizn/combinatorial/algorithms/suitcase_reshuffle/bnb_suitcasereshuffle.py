@@ -63,42 +63,8 @@ class SuitcaseReshuffleProblem(BnBProblem):
         for suitcase in suitcases.config:
             empty_space += suitcase[-1]
         return -1 * empty_space
-    
-    def is_feasible(self, sol):
-        suitcases = sol[0].config
 
-        # check if suitcase number is valid index
-        if sol[1] < -1 or sol[1] > len(self.sorted_weights) - 1:
-            return False
-
-        # for each suitcase, weights and extra space must be non-negative
-        for i in range(len(suitcases)):
-            suitcase = suitcases[i]
-            suitcase_sum = 0
-            for item in suitcase:
-                suitcase_sum += item
-                if item < 0:
-                    return False
-
-        # weights should not appear more often than in the original suitcase
-        # configuration
-        weight_counts = self._get_weight_counts(self._get_weights(suitcases))
-        for weight, count in weight_counts.items():
-            if weight not in self.weight_counts.keys():
-                return False
-            elif count > self.weight_counts[weight]:
-                return False
-            
-        # check if solution can be completed (remaining items can be packed
-        # into the suitcases)
-        completed_sol = self.complete_solution(sol)
-        if completed_sol is None:
-            return False
-        
-        return True
-        
-
-    def is_complete(self, sol):
+    def is_valid(self, sol):
         suitcases = sol[0].config
 
         # for each suitcase, weights and extra space must equal original
@@ -153,7 +119,7 @@ class SuitcaseReshuffleProblem(BnBProblem):
     def branch(self, sol):
         last_item_idx = sol[1]
         if last_item_idx == -1:
-            # if last item index is 0 (initial solution), start from empty
+            # if last item index is -1 (initial solution), start from empty
             # suitcases
             suitcases = []
             for capacity in self.capacities:

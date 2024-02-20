@@ -5,10 +5,9 @@ from optimizn.combinatorial.algorithms.traveling_salesman.city_graph\
     import CityGraph
 from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp import\
     TravelingSalesmanProblem
-from python_tsp.heuristics import solve_tsp_simulated_annealing
 import numpy as np
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
-    check_sol_optimality, check_sol_vs_init_sol
+    check_sol_vs_init_sol
 
 
 class MockCityGraph:
@@ -17,35 +16,7 @@ class MockCityGraph:
         self.num_cities = len(dists)
 
 
-def test_is_feasible():
-    dists = np.array([
-        [0, 4, 2, 1],
-        [4, 0, 3, 4],
-        [2, 3, 0, 2],
-        [1, 4, 2, 0],
-    ])
-    mcg = MockCityGraph(dists)
-    params = {
-        'input_graph': mcg,
-    }
-    tsp = TravelingSalesmanProblem(params)
-    TEST_CASES = [
-        # test case: (solution, boolean for whether solution is feasible)
-        ([0, 1, 2, 3], True),
-        ([1, 0, 2, 3], True),
-        ([1, 2, 2], False),
-        ([1, 2, 3], True),
-        ([1, 2, 3, 3], False),
-        ([1, 2, 3, 0, 1], False)
-    ]
-    for sol, is_feasible in TEST_CASES:
-        feasible = tsp.is_feasible(sol)
-        assert is_feasible == feasible, 'Feasibility check failed '\
-            + f'for solution {sol}. Expected to be feasible: {is_feasible}. '\
-            + f'Actually feasible: {feasible}'
-
-
-def test_is_complete():
+def test_is_valid():
     dists = np.array([
         [0, 4, 2, 1],
         [4, 0, 3, 4],
@@ -64,11 +35,11 @@ def test_is_complete():
         ([1, 2, 3], False),
         ([1, 2, 3, 0], True)
     ]
-    for sol, is_complete in TEST_CASES:
-        complete = tsp.is_complete(sol)
-        assert is_complete == complete, 'Completeness check failed '\
-            + f'for solution {sol}. Expected to be complete: {complete}. '\
-            + f'Actually complete: {complete}'
+    for sol, is_valid in TEST_CASES:
+        valid = tsp.is_valid(sol)
+        assert is_valid == valid, 'Validity check failed for solution '\
+            + f'{sol}. Expected to be valid: {is_valid}. Actually '\
+            + f'valid: {valid}'
 
 
 def test_get_initial_solution_sorted_dists():

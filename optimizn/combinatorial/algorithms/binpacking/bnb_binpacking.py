@@ -195,27 +195,7 @@ class BinPackingProblem(BnBProblem):
             new_sols.append((new_bin_packing, next_item_idx))
         return new_sols
 
-    def is_feasible(self, sol):
-        bin_packing = sol[0]
-
-        # check that packed items are valid
-        items = set(reduce(
-            (lambda s1, s2: s1.union(s2)),
-            list(map(lambda b: bin_packing[b], bin_packing.keys()))
-        ))
-        if len(items.difference(set(range(1, len(self.item_weights)+1)))) != 0:
-            return False
-
-        # check that for each bin, the weight is not exceeded
-        for bin in bin_packing.keys():
-            bin_weight = sum(
-                list(map(lambda x: self.item_weights[x], bin_packing[bin])))
-            if bin_weight > self.capacity:
-                return False
-
-        return True
-
-    def is_complete(self, sol):
+    def is_valid(self, sol):
         bin_packing = sol[0]
 
         # check that all items are packed

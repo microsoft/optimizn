@@ -60,7 +60,7 @@ class TravelingSalesmanProblem(BnBProblem):
                 :self.input_graph.num_cities - num_cities_in_path + 1])
         return lb_path_cost
 
-    def is_complete(self, sol):
+    def is_valid(self, sol):
         # check that all cities covered once, path length is equal to the
         # number of cities
         check_all_cities_covered = set(sol) == set(
@@ -69,13 +69,6 @@ class TravelingSalesmanProblem(BnBProblem):
         check_path_length = len(sol) == self.input_graph.num_cities
         return (check_path_length and check_cities_covered_once and
                 check_all_cities_covered)
-
-    def is_feasible(self, sol):
-        # check that covered cities are only covered once and path length is
-        # less than or equal to the number of cities
-        check_cities_covered_once = len(sol) == len(set(sol))
-        check_path_length = len(sol) <= self.input_graph.num_cities
-        return check_cities_covered_once and check_path_length
 
     def branch(self, sol):
         # build the path by creating a new solution for each uncovered city,

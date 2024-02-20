@@ -14,9 +14,8 @@ class BnBProblem(OptProblem):
         self.total_iters = 0
         self.total_time_elapsed = 0
         super().__init__(logger)
-        if not self.is_feasible(self.best_solution) or not self.is_complete(
-                self.best_solution):
-            raise Exception('Initial solution is infeasible or incomplete: '
+        if not self.is_valid(self.best_solution):
+            raise Exception('Initial solution is incomplete: '
                             + f'{self.best_solution}')
     
     def get_root(self):
@@ -30,40 +29,29 @@ class BnBProblem(OptProblem):
 
     def lbound(self, sol):
         '''
-        Computes lower bound for a feasible solution and the solutions that
-        can be obtained from it through branching
+        Computes lower bound for a given solution and the solutions that can be
+        obtained from it through branching
         '''
         raise NotImplementedError(
-            'Implement a method to compute a lower bound on a feasible '
-            + 'solution')
+            'Implement a method to compute a lower bound on a given solution')
 
     def branch(self, sol):
         '''
-        Generates other solutions from a feasible solution (branching)
+        Generates other solutions from a given solution (branching)
         '''
         raise NotImplementedError(
             'Implement a branching method to produce other solutions from a '
-            + 'feasible solution')
+            + 'given solution')
 
-    def is_complete(self, sol):
+    def is_valid(self, sol):
         '''
-        Checks if a solution is a complete solution (solves the optimization
-        problem)
+        Checks if a solution is a valid solution (solves the optimization
+        problem, adhering to its constraints)
         '''
         raise NotImplementedError(
-            'Implement a method to check if a solution is a complete '
-            + 'solution (solves the optimization problem)')
-
-    def is_feasible(self, sol):
-        '''
-        Checks if a solution is a feasible solution (is within the constraints
-        of the optimization problem, can be a complete solution or a partial
-        solution)
-        '''
-        raise NotImplementedError(
-            'Implement a method to check if a solution is a feasible '
-            + 'solution (is within the constraints of the optimization '
-            + 'problem, can be a complete solution or a partial solution)')
+            'Implement a method to check if a solution is a valid '
+            + 'solution (solves the optimization problem, adhering to its '
+            + 'constraints)')
 
     def complete_solution(self, sol):
         '''
@@ -138,6 +126,8 @@ class BnBProblem(OptProblem):
         # onto PriorityQueue
         else:
             root_sol = self.get_root()
+            # solution tuples consist of three values: lower bound, solution
+            # count, solution
             self.queue.put((self.lbound(root_sol), sol_count, root_sol))
 
         # explore solutions
@@ -152,13 +142,9 @@ class BnBProblem(OptProblem):
             # get and process branched solutions
             next_sols = self.branch(curr_sol)
             for next_sol in next_sols:
-                # skip infeasible solutions
-                if not self.is_feasible(next_sol):
-                    continue
-
                 # process branched solution
-                if self.is_complete(next_sol):
-                    # if solution is complete, update best solution and best
+                if self.is_valid(next_sol):
+                    # if solution is valid, update best solution and best
                     # solution cost if needed
                     self._update_best_solution(next_sol)
                 else:
@@ -167,10 +153,11 @@ class BnBProblem(OptProblem):
                     # solution cost if needed
                     if bnb_type == 1:
                         completed_sol = self.complete_solution(next_sol)
-                        self._update_best_solution(completed_sol)
+                        if self.is_valid(completed_sol):
+                            self._update_best_solution(completed_sol)
 
                     # if lower bound is less than best solution cost, put
-                    # incomplete, feasible solution into queue
+                    # incomplete solution into queue
                     lbound = self.lbound(next_sol)
                     if self.cost_delta(self.best_cost, lbound) > 0:
                         sol_count += 1

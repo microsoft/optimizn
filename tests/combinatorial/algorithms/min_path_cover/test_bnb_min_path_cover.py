@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import sys
 import numpy as np
 from graphing.special_graphs.neural_trigraph.rand_graph import rep_graph
 from graphing.special_graphs.neural_trigraph.path_cover import \
@@ -40,7 +39,7 @@ def test_bnb_minpathcover():
                 init_cost = mpc.best_cost
                 mpc.solve(1000, 100, 120, bnb_type)
 
-                # check final solutoin solution 
+                # check final solution 
                 check_bnb_sol(mpc, bnb_type, params)
                 check_sol_vs_init_sol(mpc.best_cost, init_cost)
 

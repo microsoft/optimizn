@@ -78,75 +78,7 @@ def test_lbound():
             + f'incorrect. Expected: {lbound}. Actual: {sol_lb}'
 
 
-def test_is_feasible():
-    TEST_CASES = [
-        # test case: (suitcase configuration, index of last packed item in 
-        # sorted list of item weights)
-        ([[7, 5, 1], [4, 6, 1]], -1),
-        ([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]], 1),
-        ([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]], 2),
-    ]
-    for config, last_item_idx in TEST_CASES:
-        # under this problem instance, the solution should be feasible
-        sc1 = SuitCases(config)
-
-        # under this problem instance, the solution should not be feasible
-        new_config = deepcopy(config)
-        for i in range(len(new_config)):
-            new_config[i][0] += 1
-        sc2 = SuitCases(new_config)
-
-        # check feasibility of solutions against both problem instances
-        for suitcases, v_sol in [(sc1, True), (sc2, False)]:
-            srp = SuitcaseReshuffleProblem(suitcases)
-            sol = (SuitCases(config), last_item_idx)
-            is_feasible = srp.is_feasible(sol)
-            assert v_sol == is_feasible, 'Feasibility check of solution '\
-                + f'({sol[0]}, {sol[1]}) failed. Expected: {v_sol}. Actual: '\
-                + f'{is_feasible}'
-
-    OTHER_TEST_CASES = [
-        # test case: (suitcase configuration, invalid suitcase configuration,
-        # index of last packed item in list of sorted item weights, boolean for
-        # whether solution is feasible)
-        (SuitCases([[7, 5, 1], [4, 6, 1]]), SuitCases([[4, 5, 4], [7, 6, -2]]),
-         0, False
-         # solution is not feasible because second suitcase is overpacked
-         ),
-        (SuitCases([[7, 5, 1], [4, 6, 1]]), SuitCases([[7, 5, 1], [4, 6, 1]]),
-         -2, False
-         # solution is not feasible because index of last packed item is less
-         # than -1
-         ),
-        (SuitCases([[7, 5, 1], [4, 6, 1]]), SuitCases([[7, 5, 1], [4, 6, 1]]),
-         4, False
-         # solution is not feasible because index of last packed item is less
-         # greater than 3
-         ),
-        (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]),
-         SuitCases([[7, 5, 1], [4, 6, 1], [12, -12, -4], [11, 10, 2]]),
-         1, False
-         # solution is not feasible because third suitcase has item with
-         # negative weight and has negative extra space
-         ),
-        (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]),
-         SuitCases([[7, 5, -1], [4, 6, 1], [12, 12, 4], [11, 10, -2]]),
-         2, False
-         # solution is not feasible because first and last suitcases have
-         # negative extra space
-         )
-    ]
-    for valid_sc, sc, suitcase_num, valid_sol in OTHER_TEST_CASES:
-        srp = SuitcaseReshuffleProblem(valid_sc)
-
-        # check feasibility of solution
-        sol = (sc, suitcase_num)
-        is_feasible = srp.is_feasible((sc, suitcase_num))
-        assert valid_sol == is_feasible, 'Feasibility check of solution '\
-            + f'{sol} failed. Expected: {valid_sol}. Actual: {is_feasible}'
-
-
-def test_is_complete():
+def test_is_valid():
     TEST_CASES = [
         # test case: (initial suitcases, solution, boolean for whether solution
         # is complete)
@@ -173,13 +105,13 @@ def test_is_complete():
          # suitcases
          )
     ]
-    for init_sc, sol, complete_sol in TEST_CASES:
+    for init_sc, sol, valid_sol in TEST_CASES:
         srp = SuitcaseReshuffleProblem(init_sc)
 
-        # check completeness of solution
-        is_complete = srp.is_complete(sol)
-        assert complete_sol == is_complete, 'Feasibility check of solution '\
-            + f'{sol} failed. Expected: {complete_sol}. Actual: {is_complete}'
+        # check validity of solution
+        is_valid = srp.is_valid(sol)
+        assert valid_sol == is_valid, 'Validity check of solution '\
+            + f'{sol} failed. Expected: {valid_sol}. Actual: {is_valid}'
 
 
 def test_complete_solution():
