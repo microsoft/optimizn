@@ -12,15 +12,15 @@ import time
 class SimAnnealProblem(OptProblem):
     def __init__(self, logger=None):
         ''' Initialize the problem '''
-        # Instead of always stopping at a random solution, pick
-        # the best one sometimes and the best daily one other times.
         super().__init__(logger)
         self.candidate = make_copy(self.best_solution)
         self.current_cost = make_copy(self.best_cost)
 
     def next_candidate(self):
         ''' Switch to the next candidate.'''
-        raise Exception("Not implemented")
+        raise NotImplementedError(
+            "Implement a function to produce the next candidate solution "
+            + "from the current candidate solution")
 
     def reset_candidate(self):
         '''

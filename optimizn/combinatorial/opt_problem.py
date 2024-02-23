@@ -18,7 +18,10 @@ class OptProblem():
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
         self.best_solution = self.get_initial_solution()
-        self.best_cost = self.cost(self.best_solution)
+        if self.best_solution is not None:
+            self.best_cost = self.cost(self.best_solution)
+        else:
+            self.best_cost = float('inf')
         self.logger.info(f'Initial solution: {self.best_solution}')
         self.logger.info(f'Initial solution cost: {self.best_cost}')
         if not hasattr(self, 'params'):
@@ -29,11 +32,13 @@ class OptProblem():
 
     def get_initial_solution(self):
         ''' Gets the initial solution.'''
-        raise Exception("Not implemented")
+        raise NotImplementedError(
+            "Implement a function to get the initial solution")
 
     def cost(self, sol):
-        ''' Gets the cost for candidate solution.'''
-        raise Exception("Not implemented")
+        ''' Gets the cost for a given solution.'''
+        raise NotImplementedError(
+            "Implement a function to compute the cost of a given solution")
 
     def cost_delta(self, cost1, cost2):
         return cost1 - cost2
