@@ -13,19 +13,30 @@ class BnBProblem(OptProblem):
         self.queue = PriorityQueue()
         self.total_iters = 0
         self.total_time_elapsed = 0
+        self.depth_first = False
         super().__init__(logger)
-        if not self.is_valid(self.best_solution):
-            raise Exception('Initial solution is incomplete: '
+        if self.best_solution is not None and not self.is_valid(
+                self.best_solution):
+            raise Exception('Initial solution is invalid: '
                             + f'{self.best_solution}')
+
+        self.sol_count = 1  # breaks ties between solutions with same lower
+        # bound and depth, solutions generated earlier are given priority
+
+        # put root solution onto PriorityQueue
+        root_sol = self.get_root()
+        self.queue.put((self.lbound(root_sol), 0, self.sol_count, root_sol))
+        # solution tuples consist of four values: lower bound, solution depth,
+        # solution count, solution
     
     def get_root(self):
         '''
-        Produces the solution corresponding to the root node of the problem
-        space tree
+        Produces the root solution, from which other solutions are obtainable
+        through branching
         '''
         raise NotImplementedError(
-            'Implement a method to get the solution corresponding to the '
-            + 'root node of the problem space tree')
+            'Implement a method to get the root solution, from which all other'
+            + ' solutions are obtainable through branching')
 
     def lbound(self, sol):
         '''
@@ -87,7 +98,7 @@ class BnBProblem(OptProblem):
                 f'Updated best solution cost to: {self.best_cost}')
 
     def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
-              bnb_type=0):
+              bnb_type=0, depth_first=False):
         '''
         This branch and bound implementation is based on the following sources.
 
@@ -112,8 +123,6 @@ class BnBProblem(OptProblem):
         iters = 0
         time_elapsed = 0
         original_total_time_elapsed = deepcopy(self.total_time_elapsed)
-        sol_count = 1  # breaks ties between solutions with same lower bound
-        # solutions generated earlier are given priority in such cases
 
         # if problem class instance is loaded, queue is saved as list, so
         # convert back to PriorityQueue
@@ -122,20 +131,36 @@ class BnBProblem(OptProblem):
             for item in self.queue:
                 queue.put(item)
             self.queue = queue
-        # otherwise, queue is created as PriorityQueue, so put root solution
-        # onto PriorityQueue
-        else:
-            root_sol = self.get_root()
-            # solution tuples consist of three values: lower bound, solution
-            # count, solution
-            self.queue.put((self.lbound(root_sol), sol_count, root_sol))
+        
+        # rearrange items in queue if depth first changed
+        if depth_first != self.depth_first:
+            new_queue = PriorityQueue()
+            if depth_first:
+                # if depth first is True, formerly False, then prioritize
+                # solutions by depth instead of lower bound
+                while not self.queue.empty():
+                    lbound, depth, sol_count, sol = self.queue.get()
+                    new_queue.put((depth, lbound, sol_count, sol))
+            else:
+                # if depth first is False, formerly True, then prioritize
+                # solutions by lower bound instead of depth
+                while not self.queue.empty():
+                    depth, lbound, sol_count, sol = self.queue.get()
+                    new_queue.put((lbound, depth, sol_count, sol))
+            
+            # update queue and depth first property
+            self.queue = new_queue
+            self.depth_first = depth_first
 
         # explore solutions
-        while not self.queue.empty() and iters != iters_limit and\
+        while not self.queue.empty() and iters < iters_limit and\
                 time_elapsed < time_limit:
             # get solution, skip if lower bound is not less than best solution
             # cost
-            lbound, _, curr_sol = self.queue.get()
+            if self.depth_first:
+                depth, lbound, _, curr_sol = self.queue.get()
+            else:
+                lbound, depth, _, curr_sol = self.queue.get()
             if self.cost_delta(self.best_cost, lbound) <= 0:
                 continue
 
@@ -160,8 +185,13 @@ class BnBProblem(OptProblem):
                     # incomplete solution into queue
                     lbound = self.lbound(next_sol)
                     if self.cost_delta(self.best_cost, lbound) > 0:
-                        sol_count += 1
-                        self.queue.put((lbound, sol_count, next_sol))
+                        self.sol_count += 1
+                        if self.depth_first:
+                            self.queue.put(
+                                (depth - 1, lbound, self.sol_count, next_sol))
+                        else:
+                            self.queue.put(
+                                (lbound, depth - 1, self.sol_count, next_sol))
 
             # log best solution and min cost, update iterations count and
             # time elapsed

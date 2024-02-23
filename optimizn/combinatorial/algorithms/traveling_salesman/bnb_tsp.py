@@ -21,8 +21,8 @@ class TravelingSalesmanProblem(BnBProblem):
         return list(range(self.input_graph.num_cities))
     
     def get_root(self):
-        # return empty path
-        return []
+        # return path with just the first city
+        return [0]
 
     def complete_solution(self, sol):
         # path completed by random ordering of unvisited cities
