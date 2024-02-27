@@ -95,7 +95,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
             new_sols.append(deepcopy(sol) + [val])
         return new_sols
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         # check that array length is the same as the number of weights/values
         check_length1 = len(sol) == len(self.weights)
         check_length2 = len(sol) == len(self.values)

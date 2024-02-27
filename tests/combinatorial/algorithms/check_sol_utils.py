@@ -8,9 +8,9 @@ def check_bnb_sol(bnb_instance, bnb_type, params):
     else:
         bnb_alg = 'modified'
 
-    # check that final solution is valid
-    assert bnb_instance.is_valid(bnb_instance.best_solution), 'Final '\
-        + f'solution ({bnb_instance.best_solution}) is not valid. '\
+    # check that final solution is feasible
+    assert bnb_instance.is_feasible(bnb_instance.best_solution), 'Final '\
+        + f'solution ({bnb_instance.best_solution}) is not feasible. '\
         + f'Algorithm: {bnb_alg} branch and bound. Params: {params}'
 
 

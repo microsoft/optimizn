@@ -64,7 +64,7 @@ class SuitcaseReshuffleProblem(BnBProblem):
             empty_space += suitcase[-1]
         return -1 * empty_space
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         suitcases = sol[0].config
 
         # for each suitcase, weights and extra space must equal original

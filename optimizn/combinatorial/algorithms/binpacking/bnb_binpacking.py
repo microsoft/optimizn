@@ -195,7 +195,7 @@ class BinPackingProblem(BnBProblem):
             new_sols.append((new_bin_packing, next_item_idx))
         return new_sols
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         bin_packing = sol[0]
 
         # check that all items are packed

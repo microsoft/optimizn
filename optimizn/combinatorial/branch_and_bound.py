@@ -15,9 +15,9 @@ class BnBProblem(OptProblem):
         self.total_time_elapsed = 0
         self.depth_first = False
         super().__init__(logger)
-        if self.best_solution is not None and not self.is_valid(
+        if self.best_solution is not None and not self.is_feasible(
                 self.best_solution):
-            raise Exception('Initial solution is invalid: '
+            raise Exception('Initial solution is infeasible: '
                             + f'{self.best_solution}')
 
         self.sol_count = 1  # breaks ties between solutions with same lower
@@ -54,15 +54,14 @@ class BnBProblem(OptProblem):
             'Implement a branching method to produce other solutions from a '
             + 'given solution')
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         '''
-        Checks if a solution is a valid solution (solves the optimization
-        problem, adhering to its constraints)
+        Checks if a solution is feasible (solves the optimization problem,
+        adhering to its constraints)
         '''
         raise NotImplementedError(
-            'Implement a method to check if a solution is a valid '
-            + 'solution (solves the optimization problem, adhering to its '
-            + 'constraints)')
+            'Implement a method to check if a solution is feasible (solves '
+            + 'the optimization problem, adhering to its constraints)')
 
     def complete_solution(self, sol):
         '''
@@ -168,8 +167,8 @@ class BnBProblem(OptProblem):
             next_sols = self.branch(curr_sol)
             for next_sol in next_sols:
                 # process branched solution
-                if self.is_valid(next_sol):
-                    # if solution is valid, update best solution and best
+                if self.is_feasible(next_sol):
+                    # if solution is feasible, update best solution and best
                     # solution cost if needed
                     self._update_best_solution(next_sol)
                 else:
@@ -178,7 +177,7 @@ class BnBProblem(OptProblem):
                     # solution cost if needed
                     if bnb_type == 1:
                         completed_sol = self.complete_solution(next_sol)
-                        if self.is_valid(completed_sol):
+                        if self.is_feasible(completed_sol):
                             self._update_best_solution(completed_sol)
 
                     # if lower bound is less than best solution cost, put

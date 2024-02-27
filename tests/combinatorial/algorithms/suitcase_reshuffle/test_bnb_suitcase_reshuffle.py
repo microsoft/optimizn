@@ -78,7 +78,7 @@ def test_lbound():
             + f'incorrect. Expected: {lbound}. Actual: {sol_lb}'
 
 
-def test_is_valid():
+def test_is_feasible():
     TEST_CASES = [
         # test case: (initial suitcases, solution, boolean for whether solution
         # is complete)
@@ -105,13 +105,13 @@ def test_is_valid():
          # suitcases
          )
     ]
-    for init_sc, sol, valid_sol in TEST_CASES:
+    for init_sc, sol, feasible_sol in TEST_CASES:
         srp = SuitcaseReshuffleProblem(init_sc)
 
-        # check validity of solution
-        is_valid = srp.is_valid(sol)
-        assert valid_sol == is_valid, 'Validity check of solution '\
-            + f'{sol} failed. Expected: {valid_sol}. Actual: {is_valid}'
+        # check feasibility of solution
+        is_feasible = srp.is_feasible(sol)
+        assert feasible_sol == is_feasible, 'Feasibility check of solution '\
+            + f'{sol} failed. Expected: {feasible_sol}. Actual: {is_feasible}'
 
 
 def test_complete_solution():

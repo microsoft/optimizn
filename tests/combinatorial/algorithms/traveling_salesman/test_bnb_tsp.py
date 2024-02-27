@@ -17,7 +17,7 @@ class MockCityGraph:
         self.num_cities = len(dists)
 
 
-def test_is_valid():
+def test_is_feasible():
     dists = np.array([
         [0, 4, 2, 1],
         [4, 0, 3, 4],
@@ -30,17 +30,17 @@ def test_is_valid():
     }
     tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
-        # test case: (solution, boolean for whether solution is complete)
+        # test case: (solution, boolean for whether solution is feasible)
         ([0, 1, 2, 3], True),
         ([1, 2], False),
         ([1, 2, 3], False),
         ([1, 2, 3, 0], True)
     ]
-    for sol, is_valid in TEST_CASES:
-        valid = tsp.is_valid(sol)
-        assert is_valid == valid, 'Validity check failed for solution '\
-            + f'{sol}. Expected to be valid: {is_valid}. Actually '\
-            + f'valid: {valid}'
+    for sol, is_feasible in TEST_CASES:
+        feasible = tsp.is_feasible(sol)
+        assert is_feasible == feasible, 'feasiblity check failed for solution '\
+            + f'{sol}. Expected to be feasible: {is_feasible}. Actually '\
+            + f'feasible: {feasible}'
 
 
 def test_get_initial_solution_sorted_dists():

@@ -120,7 +120,7 @@ class MinPathCoverProblem1(BnBProblem):
             new_sols.append((new_sol, sol[1] + 1))
         return new_sols
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         # check length of solution
         check_length = len(sol[0]) == len(self.all_paths)
 
@@ -238,7 +238,7 @@ class MinPathCoverProblem2(BnBProblem):
         new_rem_paths = np.array(new_rem_paths)
         return (sol[0], new_rem_paths, sol[2])
     
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         # check that each path in solution is valid
         path_cover_set = set(map(lambda p: tuple(p.astype(int)), sol[0]))
         all_paths_set = set(self.all_paths)

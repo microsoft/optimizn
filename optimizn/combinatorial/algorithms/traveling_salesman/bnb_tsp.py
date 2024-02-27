@@ -60,7 +60,7 @@ class TravelingSalesmanProblem(BnBProblem):
                 :self.input_graph.num_cities - num_cities_in_path + 1])
         return lb_path_cost
 
-    def is_valid(self, sol):
+    def is_feasible(self, sol):
         # check that all cities covered once, path length is equal to the
         # number of cities
         check_all_cities_covered = set(sol) == set(
