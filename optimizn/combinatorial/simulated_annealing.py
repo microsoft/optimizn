@@ -88,11 +88,11 @@ class SimAnnealProblem(OptProblem):
             cost_del = self.cost_delta(self.new_cost, self.current_cost)
             eps = np.exp(-1 * cost_del / self.temperature)
 
-            if self.new_cost < self.current_cost or uniform() < eps or reset:
+            if cost_del < 0 or uniform() < eps or reset:
                 self.update_candidate(self.new_candidate, self.new_cost)
                 if reset:
                     reset = False
-            if self.new_cost < self.best_cost:
+            if cost_del < 0:
                 self.update_best(self.new_candidate, self.new_cost)
                 self.logger.info("Best cost updated to:" + str(self.new_cost))
 

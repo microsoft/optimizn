@@ -68,7 +68,8 @@ class OptProblem():
         # Now check if the current best is better than the global best
         existing_best = load_latest_pckl(
             "Data//" + self.name + "//GlobalOpt", self.logger)
-        if existing_best is None or self.best_cost < existing_best.best_cost\
+        if existing_best is None or self.cost_delta(
+                self.best_cost, existing_best.best_cost) < 0\
                 or self.obj_changed:
             f_name = "Data//" + self.name + "//GlobalOpt//" +\
                         str(self.init_secs) + ".obj"
