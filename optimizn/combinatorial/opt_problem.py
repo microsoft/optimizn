@@ -95,7 +95,7 @@ def load_latest_pckl(path1="Data/DailyObj", logger=None):
     if logger is None:
         logger = get_logger('optimizn_logger')
     if not os.path.exists(path1):
-        logger.warning('No file located at', path1)
+        logger.warning(f'No file located at {path1}')
         return None
     msh_files = os.listdir(path1)
     msh_files = [i for i in msh_files if not i.startswith('.')]
@@ -104,7 +104,7 @@ def load_latest_pckl(path1="Data/DailyObj", logger=None):
         latest_file = msh_files[len(msh_files)-1]
         filepath = path1 + "//" + latest_file
         if os.path.getsize(filepath) == 0:
-            logger.warning('File located at', filepath, 'is empty')
+            logger.warning(f'File located at {filepath} is empty')
         else:
             filehandler = open(filepath, 'rb')
             existing_obj = pickle.load(filehandler)
