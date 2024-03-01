@@ -95,7 +95,7 @@ def load_latest_pckl(path1="Data/DailyObj", logger=None):
     if logger is None:
         logger = get_logger('optimizn_logger')
     if not os.path.exists(path1):
-        logger.error('No file located at', filepath)
+        logger.error('No file located at', path1)
         return None
     msh_files = os.listdir(path1)
     msh_files = [i for i in msh_files if not i.startswith('.')]
