@@ -194,12 +194,11 @@ def test_bnb_binpacking():
         for bnb_type in [0, 1]:
             params = BinPackingParams(weights, capacity)
             bpp = BinPackingProblem(params)
-            init_cost = bpp.best_cost
             bpp.solve(1000, 100, 120, bnb_type)
 
             # check final solution
             check_bnb_sol(bpp, bnb_type, params)
-            check_sol_vs_init_sol(bpp.best_cost, init_cost)
+            check_sol_vs_init_sol(bpp.best_cost, bpp.init_cost)
 
             # check if final solution was within 1.5 * optimal solution cost
             check_sol_optimality(bpp.best_cost, min_bins, 1.5)

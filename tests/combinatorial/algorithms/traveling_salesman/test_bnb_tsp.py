@@ -187,17 +187,15 @@ def test_bnb_tsp():
         'input_graph': graph,
     }
     tsp1 = TravelingSalesmanProblem(params)
-    init_cost1 = deepcopy(tsp1.best_cost)
     tsp1.solve(1e20, 1e20, 120, 1)
     tsp2 = TravelingSalesmanProblem(params)
-    init_cost2 = deepcopy(tsp2.best_cost)
     tsp2.solve(1e20, 1e20, 120, 1)
 
     # check final solutions
     check_bnb_sol(tsp1, 0, params)
-    check_sol_vs_init_sol(tsp1.best_cost, init_cost1)
+    check_sol_vs_init_sol(tsp1.best_cost, tsp1.init_cost)
     check_bnb_sol(tsp2, 1, params)
-    check_sol_vs_init_sol(tsp2.best_cost, init_cost2)
+    check_sol_vs_init_sol(tsp2.best_cost, tsp2.init_cost)
 
 
 def test_depth_first():

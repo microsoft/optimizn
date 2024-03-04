@@ -23,12 +23,11 @@ def test_bnb_zeroone_knapsack():
         for bnb_type in [0, 1]:
             params = KnapsackParams(values, weights, capacity)
             kp = ZeroOneKnapsackProblem(params)
-            init_cost = kp.best_cost
             kp.solve(1000, 100, 120, bnb_type)
 
             # check final solution
             check_bnb_sol(kp, bnb_type, params)
-            check_sol_vs_init_sol(kp.best_cost, init_cost)
+            check_sol_vs_init_sol(kp.best_cost, kp.init_cost)
 
             # check final solution optimality
             check_sol(kp.best_solution, [opt_sol])

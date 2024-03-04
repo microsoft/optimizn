@@ -27,9 +27,8 @@ def test_sa_tsp():
 
     # run simulated annealing algorithm
     ts = TravSalsmn(tt)
-    init_cost = ts.best_cost
     ts.anneal(n_iter=int(1e20), reset_p=0, time_limit=60)
 
     # check final solution optimality
-    check_sol_vs_init_sol(ts.best_cost, init_cost)
+    check_sol_vs_init_sol(ts.best_cost, ts.init_cost)
     check_sol_optimality(ts.best_cost, distance, 1.25)

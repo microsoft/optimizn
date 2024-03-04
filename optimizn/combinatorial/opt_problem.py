@@ -5,6 +5,7 @@ import pickle
 import os
 from datetime import datetime
 from optimizn.utils import get_logger
+from copy import deepcopy
 
 
 class OptProblem():
@@ -17,13 +18,15 @@ class OptProblem():
             self.logger = logger
         self.init_time = datetime.now()
         self.init_secs = int(self.init_time.timestamp())
-        self.best_solution = self.get_initial_solution()
-        if self.best_solution is not None:
-            self.best_cost = self.cost(self.best_solution)
+        self.init_solution = self.get_initial_solution()
+        if self.init_solution is not None:
+            self.init_cost = self.cost(self.init_solution)
         else:
-            self.best_cost = float('inf')
-        self.logger.info(f'Initial solution: {self.best_solution}')
-        self.logger.info(f'Initial solution cost: {self.best_cost}')
+            self.init_cost = float('inf')
+        self.best_solution = deepcopy(self.init_solution)
+        self.best_cost = deepcopy(self.init_cost)
+        self.logger.info(f'Initial solution: {self.init_solution}')
+        self.logger.info(f'Initial solution cost: {self.init_cost}')
         if not hasattr(self, 'params'):
             raise Exception(
                 'All problem class instances must have a "params" attribute, '

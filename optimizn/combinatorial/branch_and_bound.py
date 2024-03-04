@@ -15,10 +15,10 @@ class BnBProblem(OptProblem):
         self.total_time_elapsed = 0
         self.depth_first = False
         super().__init__(logger)
-        if self.best_solution is not None and not self.is_feasible(
-                self.best_solution):
+        if self.init_solution is not None and not self.is_feasible(
+                self.init_solution):
             raise Exception('Initial solution is infeasible: '
-                            + f'{self.best_solution}')
+                            + f'{self.init_solution}')
 
         self.sol_count = 1  # breaks ties between solutions with same lower
         # bound and depth, solutions generated earlier are given priority

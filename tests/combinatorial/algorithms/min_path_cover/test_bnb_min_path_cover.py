@@ -36,12 +36,11 @@ def test_bnb_minpathcover():
             mpc1 = MinPathCoverProblem1(params)
             mpc2 = MinPathCoverProblem2(params)
             for mpc in [mpc1, mpc2]:
-                init_cost = mpc.best_cost
                 mpc.solve(1000, 100, 120, bnb_type)
 
                 # check final solution 
                 check_bnb_sol(mpc, bnb_type, params)
-                check_sol_vs_init_sol(mpc.best_cost, init_cost)
+                check_sol_vs_init_sol(mpc.best_cost, mpc.init_cost)
 
                 # check final solution optimality if modified branch and bound
                 # is used

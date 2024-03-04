@@ -25,11 +25,10 @@ def test_sa_minpathcover1(edges1=None, edges2=None, n_iter=20000, swtch=1):
     # get simulated annealing solution
     ntg = NeuralTriGraph(edges1, edges2)
     mpc = MinPathCover_NTG(ntg, swtch=swtch)
-    init_cost = mpc.best_cost
     mpc.anneal(n_iter)
 
     # check optimality of simulated annealing solution
-    check_sol_vs_init_sol(mpc.best_cost, init_cost)
+    check_sol_vs_init_sol(mpc.best_cost, mpc.init_cost)
     check_sol_optimality(mpc.best_cost, opt_sol_cost, 1.2)
 
 

@@ -33,11 +33,10 @@ def test_sa_suitcasereshuffle():
 	config = [[7,5,1],[4,6,1]]
 	sc = SuitCases(config)
 	scr = SuitCaseReshuffle(params=sc)
-	init_cost = scr.best_cost
 	scr.anneal()
 
 	# check final solution
-	check_sol_vs_init_sol(scr.best_cost, init_cost)
+	check_sol_vs_init_sol(scr.best_cost, scr.init_cost)
 	exp_sols = [
 		[[7, 6, 0], [4, 5, 2]],
 		[[7, 6, 0], [5, 4, 2]],

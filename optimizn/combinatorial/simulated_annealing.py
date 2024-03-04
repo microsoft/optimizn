@@ -14,8 +14,8 @@ class SimAnnealProblem(OptProblem):
     def __init__(self, logger=None):
         ''' Initialize the problem '''
         super().__init__(logger)
-        self.candidate = make_copy(self.best_solution)
-        self.current_cost = make_copy(self.best_cost)
+        self.candidate = make_copy(self.init_solution)
+        self.current_cost = make_copy(self.init_cost)
 
     def next_candidate(self):
         ''' Switch to the next candidate.'''

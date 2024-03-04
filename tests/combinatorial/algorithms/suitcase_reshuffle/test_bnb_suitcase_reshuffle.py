@@ -210,12 +210,11 @@ def test_bnb_suitcasereshuffle():
                 'init_sol': sc
             }
             srp = SuitcaseReshuffleProblem(sc)
-            init_cost = srp.best_cost
             srp.solve(1000, 100, 120, bnb_type)
 
             # check final solution
             check_bnb_sol(srp, bnb_type, params)
-            check_sol_vs_init_sol(srp.best_cost, init_cost)
+            check_sol_vs_init_sol(srp.best_cost, srp.init_cost)
 
             # check final solution optimality, if modified branch and bound
             # is used
