@@ -90,7 +90,7 @@ class BnBProblem(OptProblem):
         cost = self.cost(sol)
         if self.cost_delta(self.best_cost, cost) > 0:
             self.best_cost = cost
-            self.best_solution = deepcopy(sol)
+            self.best_solution = sol
             self.logger.info(
                 f'Updated best solution to: {self.best_solution}')
             self.logger.info(
@@ -121,7 +121,7 @@ class BnBProblem(OptProblem):
         start = time.time()
         iters = 0
         time_elapsed = 0
-        original_total_time_elapsed = deepcopy(self.total_time_elapsed)
+        original_total_time_elapsed = self.total_time_elapsed
 
         # if problem class instance is loaded, queue is saved as list, so
         # convert back to PriorityQueue
