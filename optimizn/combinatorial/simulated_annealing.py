@@ -7,6 +7,7 @@ import numpy as np
 from copy import deepcopy
 from optimizn.combinatorial.opt_problem import OptProblem
 import time
+import warnings
 
 
 class SimAnnealProblem(OptProblem):
@@ -86,13 +87,33 @@ class SimAnnealProblem(OptProblem):
                 self.new_candidate = self.next_candidate(self.candidate)
                 self.new_cost = self.cost(self.new_candidate)
             cost_del = self.cost_delta(self.new_cost, self.current_cost)
-            eps = np.exp(-1 * cost_del / self.temperature)
+            # treat runtime warnings like errors, to catch overflow warnings
+            warnings.filterwarnings(
+                "error", category=RuntimeWarning)
+            try:
+                # see if overflow occurs
+                eps = np.exp(-1 * cost_del / self.temperature)
+            except RuntimeWarning:
+                # overflow occurred
+
+                # if cost delta and temperature have the same sign, then
+                # eps will be very close to 0, so eps is set to 0
+                if (cost_del > 0 and self.temperature > 0) or\
+                        (cost_del < 0 and self.temperature < 0):
+                    eps = 0
+                # if cost delta and temperature have opposite signs,
+                # then eps will be very large (larger than any value sampled
+                # from uniform distribution on [0, 1)), so eps is set to 1
+                else:
+                    eps = 1
+            # reset warnings
+            warnings.resetwarnings()
 
             if cost_del < 0 or uniform() < eps or reset:
                 self.update_candidate(self.new_candidate, self.new_cost)
                 if reset:
                     reset = False
-            if cost_del < 0:
+            if self.cost_delta(self.new_cost, self.best_cost) < 0:
                 self.update_best(self.new_candidate, self.new_cost)
                 self.logger.info("Best cost updated to:" + str(self.new_cost))
 
