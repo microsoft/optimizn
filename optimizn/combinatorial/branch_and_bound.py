@@ -4,7 +4,6 @@
 import time
 from queue import PriorityQueue
 from optimizn.combinatorial.opt_problem import OptProblem
-from copy import deepcopy
 
 
 class BnBProblem(OptProblem):
