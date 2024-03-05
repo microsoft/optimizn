@@ -60,12 +60,14 @@ class OptProblem():
                         str(self.init_secs) + ".obj"
             file1 = open(f_name, 'wb')
             pickle.dump(self.params, file1)
+            file1.close()
             self.logger.info("Wrote to DailyObj")
         # Write the optimization object.
         f_name = "Data//" + self.name + "//DailyOpt//" + str(self.init_secs)\
             + ".obj"
         file1 = open(f_name, 'wb')
         pickle.dump(self, file1)
+        file1.close()
         self.logger.info("Wrote to DailyOpt")
 
         # Now check if the current best is better than the global best
@@ -78,6 +80,7 @@ class OptProblem():
                         str(self.init_secs) + ".obj"
             file1 = open(f_name, 'wb')
             pickle.dump(self, file1)
+            file1.close()
             self.logger.info("Wrote to GlobalOpt")
 
 
@@ -111,5 +114,6 @@ def load_latest_pckl(path1="Data/DailyObj", logger=None):
         else:
             filehandler = open(filepath, 'rb')
             existing_obj = pickle.load(filehandler)
+            filehandler.close()
             return existing_obj
     return None
