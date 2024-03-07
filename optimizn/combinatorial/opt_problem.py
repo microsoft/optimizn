@@ -9,9 +9,10 @@ from copy import deepcopy
 
 
 class OptProblem():
-    def __init__(self, logger=None):
+    def __init__(self, params, logger=None):
         ''' Initialize the problem '''
         self.name = self.__class__.__name__
+        self.params = params
         if logger is None:
             self.logger = get_logger(f'{self.name}_logger')
         else:
@@ -27,11 +28,6 @@ class OptProblem():
         self.best_cost = deepcopy(self.init_cost)
         self.logger.info(f'Initial solution: {self.init_solution}')
         self.logger.info(f'Initial solution cost: {self.init_cost}')
-        if not hasattr(self, 'params'):
-            raise Exception(
-                'All problem class instances must have a "params" attribute, '
-                + 'which is an object that contains the input parameters '
-                + 'to the problem class')
 
     def get_initial_solution(self):
         ''' Gets the initial solution.'''

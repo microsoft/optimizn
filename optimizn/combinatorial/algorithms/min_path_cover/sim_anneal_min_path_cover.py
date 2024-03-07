@@ -21,11 +21,10 @@ class MinPathCover_NTG(SimAnnealProblem):
     """
     def __init__(self, ntg, swtch=1):
         self.ntg = ntg
-        self.params = ntg
         self.adj = ntg.g1.adj
         self.swtch = swtch
         self.name = "MinPathCover_NeuralTriGraph"
-        super().__init__()
+        super().__init__(ntg)
 
     def get_initial_solution(self):
         """

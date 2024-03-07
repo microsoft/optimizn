@@ -11,11 +11,13 @@ import warnings
 
 
 class SimAnnealProblem(OptProblem):
-    def __init__(self, logger=None):
+    def __init__(self, params, logger=None):
         ''' Initialize the problem '''
-        super().__init__(logger)
+        super().__init__(params, logger)
         self.candidate = make_copy(self.init_solution)
         self.current_cost = make_copy(self.init_cost)
+        self.total_iters = 0
+        self.iters_since_reset = -1
 
     def next_candidate(self):
         ''' Switch to the next candidate.'''
@@ -61,7 +63,6 @@ class SimAnnealProblem(OptProblem):
         accessed 8-January-2024.
         '''
         reset = False
-        j = -1
         start = time.time()
         for i in range(n_iter):
             # check if time limit exceeded
@@ -69,19 +70,21 @@ class SimAnnealProblem(OptProblem):
                 self.logger.info('Time limit exceeded, terminating algorithm')
                 self.logger.info('Best solution: ' + str(self.best_cost))
                 break
-            j = j + 1
-            self.temperature = self.get_temperature(j)
+            self.iters_since_reset = self.iters_since_reset + 1
+            self.temperature = self.get_temperature(self.iters_since_reset)
             if i % log_iters == 0:
                 self.logger.info(
-                    "Iteration: " + str(i) + " Current best solution: "
-                    + str(self.best_cost))
+                    "Iterations (total): " + str(self.total_iters))
+                self.logger.info("Iterations (current): " + str(i))
+                self.logger.info("Best solution: " + str(self.best_solution))
+                self.logger.info("Best solution cost: " + str(self.best_cost))
             # eps = 0.3 * e**(-i/n_iter)
             if np.random.uniform() < reset_p:
                 self.logger.info("Resetting candidate solution.")
                 self.new_candidate = self.reset_candidate()
                 self.new_cost = self.cost(self.new_candidate)
                 self.logger.info("with cost: " + str(self.new_cost))
-                j = 0
+                self.iters_since_reset = 0
                 reset = True
             else:
                 self.new_candidate = self.next_candidate(self.candidate)
@@ -116,6 +119,8 @@ class SimAnnealProblem(OptProblem):
             if self.cost_delta(self.new_cost, self.best_cost) < 0:
                 self.update_best(self.new_candidate, self.new_cost)
                 self.logger.info("Best cost updated to:" + str(self.new_cost))
+            
+            self.total_iters += 1
 
     def update_candidate(self, candidate, cost):
         self.candidate = make_copy(candidate)

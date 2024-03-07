@@ -8,12 +8,11 @@ from optimizn.combinatorial.opt_problem import OptProblem
 
 class BnBProblem(OptProblem):
     def __init__(self, params, logger=None):
-        self.params = params
         self.queue = PriorityQueue()
         self.total_iters = 0
         self.total_time_elapsed = 0
         self.depth_first = False
-        super().__init__(logger)
+        super().__init__(params, logger)
         if self.init_solution is not None and not self.is_feasible(
                 self.init_solution):
             raise Exception('Initial solution is infeasible: '

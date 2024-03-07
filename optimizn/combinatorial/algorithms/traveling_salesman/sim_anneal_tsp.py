@@ -32,8 +32,7 @@ class TravSalsmn(SimAnnealProblem):
     Online; accessed 27-March-2023.
     '''
     def __init__(self, params, temp_reduce_factor=0.99):
-        self.params = params
-        super().__init__()
+        super().__init__(params)
         self.temp_reduce_factor = temp_reduce_factor
         
         # set initial temperature
