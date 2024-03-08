@@ -71,8 +71,8 @@ class SimAnnealProblem(OptProblem):
                 self.logger.info('Best solution: ' + str(self.best_cost))
                 break
             self.iters_since_reset = self.iters_since_reset + 1
-            self.temperature = self.get_temperature(self.iters_since_reset)
-            if i % log_iters == 0:
+            temp = self.get_temperature(self.iters_since_reset)
+            if i % int(log_iters) == 0:
                 self.logger.info(
                     "Iterations (total): " + str(self.total_iters))
                 self.logger.info("Iterations (current): " + str(i))
@@ -95,14 +95,13 @@ class SimAnnealProblem(OptProblem):
                 "error", category=RuntimeWarning)
             try:
                 # see if overflow occurs
-                eps = np.exp(-1 * cost_del / self.temperature)
+                eps = np.exp(-1 * cost_del / temp)
             except RuntimeWarning:
                 # overflow occurred
 
                 # if cost delta and temperature have the same sign, then
                 # eps will be very close to 0, so eps is set to 0
-                if (cost_del > 0 and self.temperature > 0) or\
-                        (cost_del < 0 and self.temperature < 0):
+                if (cost_del > 0 and temp > 0) or (cost_del < 0 and temp < 0):
                     eps = 0
                 # if cost delta and temperature have opposite signs,
                 # then eps will be very large (larger than any value sampled

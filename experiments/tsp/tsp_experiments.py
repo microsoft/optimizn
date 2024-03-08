@@ -54,68 +54,68 @@ def save_exp_results(exp_num, exp_results):
     pickle.dump(exp_results, open(f'exp{exp_num}_results.obj', 'wb'))
 
 
-def run_sa1(city_graph, results, compute_time_mins=1, num_trials=3, reset_p=0):
-    results['sa1'] = []
-    results['sa1_time'] = []
-    tsp_sa1 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
-    results['sa1_init_sol'] = tsp_sa1.best_solution
-    results['sa1_init_sol_cost'] = tsp_sa1.best_cost
+def run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p):
+    results['o_sa1'] = []
+    results['o_sa1_time'] = []
+    tsp_o_sa1 = TravSalsmn(city_graph)
+    results['o_sa1_init_sol'] = tsp_o_sa1.best_solution
+    results['o_sa1_init_sol_cost'] = tsp_o_sa1.best_cost
     s = time.time()
-    tsp_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
+    tsp_o_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                    time_limit=compute_time_mins * 60 * num_trials,
                    log_iters=LOG_ITERS)
     e = time.time()
-    results['sa1'].append(tsp_sa1.best_cost)
-    results['sa1_time'].append(e - s)
+    results['o_sa1'].append(tsp_o_sa1.best_cost)
+    results['o_sa1_time'].append(e - s)
 
 
-def run_sa2(city_graph, results, compute_time_mins=1, num_trials=3, reset_p=0):
-    results['sa2'] = []
-    results['sa2_time'] = []
-    tsp_sa2 = TravSalsmn(city_graph, temp_reduce_factor=0.99)
-    _clear_cont_train_data(tsp_sa2)
-    results['sa2_init_sol'] = tsp_sa2.best_solution
-    results['sa2_init_sol_cost'] = tsp_sa2.best_cost
+def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
+    results['o_sa2'] = []
+    results['o_sa2_time'] = []
+    tsp_o_sa2 = TravSalsmn(city_graph)
+    _clear_cont_train_data(tsp_o_sa2)
+    results['o_sa2_init_sol'] = tsp_o_sa2.best_solution
+    results['o_sa2_init_sol_cost'] = tsp_o_sa2.best_cost
     s = time.time()
-    tsp_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
+    tsp_o_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                    time_limit=compute_time_mins * 60, log_iters=LOG_ITERS)
     e = time.time()
-    tsp_sa2.persist()
-    results['sa2'].append(tsp_sa2.best_cost)
-    results['sa2_time'].append(e - s)
+    tsp_o_sa2.persist()
+    results['o_sa2'].append(tsp_o_sa2.best_cost)
+    results['o_sa2_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = tsp_sa2.__class__.__name__
+        class_name = tsp_o_sa2.__class__.__name__
         prior_params = load_latest_pckl(
-            path1=f'Data/{class_name}/DailyObj', logger=tsp_sa2.logger)
-        if tsp_sa2.params == prior_params:
-            tsp_sa2 = load_latest_pckl(
-                path1=f'Data/{class_name}/DailyOpt', logger=tsp_sa2.logger)
-            if tsp_sa2 is None:
+            path1=f'Data/{class_name}/DailyObj', logger=tsp_o_sa2.logger)
+        if tsp_o_sa2.params == prior_params:
+            tsp_o_sa2 = load_latest_pckl(
+                path1=f'Data/{class_name}/DailyOpt', logger=tsp_o_sa2.logger)
+            if tsp_o_sa2 is None:
                 raise Exception(
                     'No saved instance for TSP simulated annealing')
         else:
             raise Exception('TSP simulated annealing parameters have changed')
         s = time.time()
-        tsp_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
+        tsp_o_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                        time_limit=compute_time_mins * 60,
                        log_iters=LOG_ITERS)
         e = time.time()
-        tsp_sa2.persist()
-        results['sa2'].append(tsp_sa2.best_cost)
-        results['sa2_time'].append(e - s)
+        tsp_o_sa2.persist()
+        results['o_sa2'].append(tsp_o_sa2.best_cost)
+        results['o_sa2_time'].append(e - s)
 
 
-def run_sa3(city_graph, results, compute_time_mins=1, num_trials=3):
-    results['sa3'] = []
-    results['sa3_time'] = []
-    opt_permutation = list(range(city_graph.num_cities))
+def run_pt_sa1(city_graph, results, compute_time_mins, num_trials):
+    results['pt_sa1'] = []
+    results['pt_sa1_time'] = []
+    permutation = list(range(city_graph.num_cities))
     opt_dist = 0
-    for i in range(1, len(opt_permutation)):
-        opt_dist += city_graph.dists[opt_permutation[i], opt_permutation[i-1]]
+    for i in range(1, len(permutation)):
+        opt_dist += city_graph.dists[permutation[i], permutation[i-1]]
     opt_dist += city_graph.dists[
-        opt_permutation[0], opt_permutation[len(opt_permutation) - 1]]
-    results['sa3_init_sol'] = opt_permutation
-    results['sa3_init_sol_cost'] = opt_dist
+        permutation[0], permutation[len(permutation) - 1]]
+    results['pt_sa1_init_sol'] = permutation
+    results['pt_sa1_init_sol_cost'] = opt_dist
     s = time.time()
     e = time.time()
     while (e - s) < (compute_time_mins * 60 * num_trials):
@@ -123,39 +123,37 @@ def run_sa3(city_graph, results, compute_time_mins=1, num_trials=3):
             city_graph.dists,
             max_processing_time=(
                 compute_time_mins * 60 * num_trials) - (e - s),
-            alpha=0.99, x0=opt_permutation, perturbation_scheme='ps2')
+            alpha=0.99, x0=permutation, perturbation_scheme='ps2')
         if opt_dist > distance:
             opt_dist = distance
-            opt_permutation = permutation
         e = time.time()
-    results['sa3'].append(opt_dist)
-    results['sa3_time'].append(e - s)
+    results['pt_sa1'].append(opt_dist)
+    results['pt_sa1_time'].append(e - s)
 
 
-def run_sa4(city_graph, results, compute_time_mins, num_trials):
-    results['sa4'] = []
-    results['sa4_time'] = []
-    opt_permutation = list(range(city_graph.num_cities))
+def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
+    results['pt_sa2'] = []
+    results['pt_sa2_time'] = []
+    permutation = list(range(city_graph.num_cities))
     opt_dist = 0
-    for i in range(1, len(opt_permutation)):
-        opt_dist += city_graph.dists[opt_permutation[i], opt_permutation[i-1]]
+    for i in range(1, len(permutation)):
+        opt_dist += city_graph.dists[permutation[i], permutation[i-1]]
     opt_dist += city_graph.dists[
-        opt_permutation[0], opt_permutation[len(opt_permutation) - 1]]
-    results['sa4_init_sol'] = opt_permutation
-    results['sa4_init_sol_cost'] = opt_dist
+        permutation[0], permutation[len(permutation) - 1]]
+    results['pt_sa2_init_sol'] = permutation
+    results['pt_sa2_init_sol_cost'] = opt_dist
     s = time.time()
     e = time.time()
     while (e - s) < (compute_time_mins * 60):
         permutation, distance = solve_tsp_simulated_annealing(
             city_graph.dists,
             max_processing_time=(compute_time_mins * 60) - (e - s),
-            alpha=0.99, x0=opt_permutation, perturbation_scheme='ps2')
+            alpha=0.99, x0=permutation, perturbation_scheme='ps2')
         if opt_dist > distance:
             opt_dist = distance
-            opt_permutation = permutation
         e = time.time()
-    results['sa4'].append(opt_dist)
-    results['sa4_time'].append(e - s)
+    results['pt_sa2'].append(opt_dist)
+    results['pt_sa2_time'].append(e - s)
     for _ in range(num_trials - 1):
         s = time.time()
         e = time.time()
@@ -163,13 +161,12 @@ def run_sa4(city_graph, results, compute_time_mins, num_trials):
             permutation, distance = solve_tsp_simulated_annealing(
                 city_graph.dists,
                 max_processing_time=(compute_time_mins * 60) - (e - s),
-                alpha=0.99, x0=opt_permutation, perturbation_scheme='ps2')
+                alpha=0.99, x0=permutation, perturbation_scheme='ps2')
             if opt_dist > distance:
                 opt_dist = distance
-                opt_permutation = permutation
             e = time.time()
-        results['sa4'].append(opt_dist)
-        results['sa4_time'].append(e - s)
+        results['pt_sa2'].append(opt_dist)
+        results['pt_sa2_time'].append(e - s)
 
 
 def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials):
@@ -181,7 +178,7 @@ def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials):
     s = time.time()
     mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60 * num_trials,
-                   bnb_type=1)
+                   bnb_type=1, depth_first=True)
     e = time.time()
     results['mod_bnb1'].append(mod_bnb1.best_cost)
     results['mod_bnb1_time'].append(e - s)
@@ -196,7 +193,8 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials):
     results['mod_bnb2_init_sol_cost'] = mod_bnb2.best_cost
     s = time.time()
     mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                   time_limit=compute_time_mins * 60, bnb_type=1)
+                   time_limit=compute_time_mins * 60, bnb_type=1,
+                   depth_first=True)
     e = time.time()
     mod_bnb2.persist()
     results['mod_bnb2'].append(mod_bnb2.best_cost)
@@ -217,7 +215,8 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials):
                 'TSP modified branch and bound parameters have changed')
         s = time.time()
         mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                       time_limit=compute_time_mins * 60)
+                       time_limit=compute_time_mins * 60, bnb_type=1,
+                       depth_first=True)
         e = time.time()
         mod_bnb2.persist()
         results['mod_bnb2'].append(mod_bnb2.best_cost)
@@ -233,7 +232,7 @@ def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials):
     s = time.time()
     trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60 * num_trials,
-                    bnb_type=0)
+                    bnb_type=0, depth_first=True)
     e = time.time()
     results['trad_bnb1'].append(trad_bnb1.best_cost)
     results['trad_bnb1_time'].append(e - s)
@@ -248,7 +247,8 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials):
     results['trad_bnb2_init_sol_cost'] = trad_bnb2.best_cost
     s = time.time()
     trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                    time_limit=compute_time_mins * 60, bnb_type=0)
+                    time_limit=compute_time_mins * 60, bnb_type=0,
+                    depth_first=True)
     e = time.time()
     trad_bnb2.persist()
     results['trad_bnb2'].append(trad_bnb2.best_cost)
@@ -276,36 +276,36 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials):
         results['trad_bnb2_time'].append(e - s)
 
 
-def run_tsp_experiments(num_cities=50, compute_time_mins=1, num_trials=3,
-                        reset_p=0):
+def run_tsp_experiments(num_cities=200, compute_time_mins=1, num_trials=3,
+                        reset_p=1/1000000):
     # for collecting results
     results = dict()
 
     # create traveling salesman problem parameters
     city_graph = CityGraph(num_cities)
 
-    # run simulated annealing 1
-    run_sa1(city_graph, results, compute_time_mins, num_trials, reset_p)
+    # run optimizn simulated annealing (single stretch)
+    run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p)
 
-    # run simulated annealing 2
-    run_sa2(city_graph, results, compute_time_mins, num_trials, reset_p)
+    # run optimizn simulated annealing (successive runs)
+    run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p)
 
-    # run simulated annealing 3
-    run_sa3(city_graph, results, compute_time_mins, num_trials)
+    # run python-tsp simulated annealing (single stretch)
+    run_pt_sa1(city_graph, results, compute_time_mins, num_trials)
 
-    # run simulated annealing 4
-    run_sa4(city_graph, results, compute_time_mins, num_trials)
+    # run python-tsp simulated annealing (successive runs)
+    run_pt_sa2(city_graph, results, compute_time_mins, num_trials)
 
-    # run modified branch and bound 1
+    # run optimizn modified branch and bound (single stretch)
     run_mod_bnb1(city_graph, results, compute_time_mins, num_trials)
 
-    # run modified branch and bound 2
+    # run optimizn modified branch and bound (successive runs)
     run_mod_bnb2(city_graph, results, compute_time_mins, num_trials)
 
-    # run traditional branch and bound 1
+    # run optimizn traditional branch and bound (single stretch)
     run_trad_bnb1(city_graph, results, compute_time_mins, num_trials)
 
-    # run traditional branch and bound 2
+    # run optimizn traditional branch and bound (successive runs)
     run_trad_bnb2(city_graph, results, compute_time_mins, num_trials)
 
     # return results

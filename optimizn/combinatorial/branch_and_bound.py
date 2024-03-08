@@ -71,7 +71,7 @@ class BnBProblem(OptProblem):
             'Implement a method to complete an incomplete solution')
 
     def _log_results(self, iters, log_iters, time_elapsed, force=False):
-        if force or iters == 1 or iters % log_iters == 0:
+        if force or iters == 1 or iters % int(log_iters) == 0:
             self.logger.info(f'Iterations (current run): {iters}')
             self.logger.info(f'Iterations (total): {self.total_iters}')
             queue = list(self.queue.queue)
