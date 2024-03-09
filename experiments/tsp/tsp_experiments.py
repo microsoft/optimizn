@@ -30,23 +30,24 @@ def _clear_cont_train_data(opt_prob_obj):
 
 
 # function to get experiment graph and results dictionary
-def get_exp_data(exp_num, num_cities):
+def get_exp_data(num_cities):
     # create/load experiment graph
-    if os.path.isfile(f'exp{exp_num}_city_graph.obj'):
-        exp_city_graph = pickle.load(
-            open(f'exp{exp_num}_city_graph.obj', 'rb'))
+    if os.path.isfile(f'city_graph.obj'):
+        city_graph = pickle.load(open(f'city_graph.obj', 'rb'))
+        print('Loaded saved city graph')
     else:
-        exp_city_graph = CityGraph(num_cities)
-        pickle.dump(
-            exp_city_graph, open(f'exp{exp_num}_city_graph.obj', 'wb'))
+        city_graph = CityGraph(num_cities)
+        pickle.dump(city_graph, open(f'city_graph.obj', 'wb'))
+        print('Created and saved new city graph')
 
-    # create/load experiment 1 results dictionary
-    if os.path.isfile(f'exp{exp_num}_results.obj'):
-        exp_results = pickle.load(
-            open(f'exp{exp_num}_results.obj', 'rb'))
+    # create/load experiment results dictionary
+    if os.path.isfile(f'exp_results.obj'):
+        exp_results = pickle.load(open(f'exp_results.obj', 'rb'))
+        print('Loaded saved experiment results dictionary')
     else:
         exp_results = dict()
-    return exp_city_graph, exp_results
+        print('Created new experiment results dictionary')
+    return city_graph, exp_results
 
 
 # function to save experiment results dictionary
@@ -84,7 +85,7 @@ def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
     results['o_sa2'].append(tsp_o_sa2.best_cost)
     results['o_sa2_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = tsp_o_sa2.__class__.__name__
+        class_name = tsp_o_sa2.name
         prior_params = load_latest_pckl(
             path1=f'Data/{class_name}/DailyObj', logger=tsp_o_sa2.logger)
         if tsp_o_sa2.params == prior_params:
@@ -169,38 +170,48 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
         results['pt_sa2_time'].append(e - s)
 
 
-def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials):
-    results['mod_bnb1'] = []
-    results['mod_bnb1_time'] = []
+def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
+                 depth_first):
+    if depth_first:
+        alg_name = 'df_mod_bnb1'
+    else:
+        alg_name = 'mod_bnb1'
+    results[f'{alg_name}'] = []
+    results[f'{alg_name}_time'] = []
     mod_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['mod_bnb1_init_sol'] = mod_bnb1.best_solution
-    results['mod_bnb1_init_sol_cost'] = mod_bnb1.best_cost
+    results[f'{alg_name}_init_sol'] = mod_bnb1.best_solution
+    results[f'{alg_name}_init_sol_cost'] = mod_bnb1.best_cost
     s = time.time()
     mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60 * num_trials,
-                   bnb_type=1, depth_first=True)
+                   bnb_type=1, depth_first=depth_first)
     e = time.time()
-    results['mod_bnb1'].append(mod_bnb1.best_cost)
-    results['mod_bnb1_time'].append(e - s)
+    results[f'{alg_name}'].append(mod_bnb1.best_cost)
+    results[f'{alg_name}_time'].append(e - s)
 
 
-def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials):
-    results['mod_bnb2'] = []
-    results['mod_bnb2_time'] = []
+def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
+                 depth_first):
+    if depth_first:
+        alg_name = 'df_mod_bnb2'
+    else:
+        alg_name = 'mod_bnb2'
+    results[f'{alg_name}'] = []
+    results[f'{alg_name}_time'] = []
     mod_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
     _clear_cont_train_data(mod_bnb2)
-    results['mod_bnb2_init_sol'] = mod_bnb2.best_solution
-    results['mod_bnb2_init_sol_cost'] = mod_bnb2.best_cost
+    results[f'{alg_name}_init_sol'] = mod_bnb2.best_solution
+    results[f'{alg_name}_init_sol_cost'] = mod_bnb2.best_cost
     s = time.time()
     mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60, bnb_type=1,
-                   depth_first=True)
+                   depth_first=depth_first)
     e = time.time()
     mod_bnb2.persist()
-    results['mod_bnb2'].append(mod_bnb2.best_cost)
-    results['mod_bnb2_time'].append(e - s)
+    results[f'{alg_name}'].append(mod_bnb2.best_cost)
+    results[f'{alg_name}_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = mod_bnb2.__class__.__name__
+        class_name = mod_bnb2.name
         prior_params = load_latest_pckl(
             path1=f'Data/{class_name}/DailyObj', logger=mod_bnb2.logger)
         if mod_bnb2.params == prior_params:
@@ -216,45 +227,55 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials):
         s = time.time()
         mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                        time_limit=compute_time_mins * 60, bnb_type=1,
-                       depth_first=True)
+                       depth_first=depth_first)
         e = time.time()
         mod_bnb2.persist()
-        results['mod_bnb2'].append(mod_bnb2.best_cost)
-        results['mod_bnb2_time'].append(e - s)
+        results[f'{alg_name}'].append(mod_bnb2.best_cost)
+        results[f'{alg_name}_time'].append(e - s)
 
 
-def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials):
-    results['trad_bnb1'] = []
-    results['trad_bnb1_time'] = []
+def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
+                  depth_first):
+    if depth_first:
+        alg_name = 'df_trad_bnb1'
+    else:
+        alg_name = 'trad_bnb1'
+    results[f'{alg_name}'] = []
+    results[f'{alg_name}_time'] = []
     trad_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
-    results['trad_bnb1_init_sol'] = trad_bnb1.best_solution
-    results['trad_bnb1_init_sol_cost'] = trad_bnb1.best_cost
+    results[f'{alg_name}_init_sol'] = trad_bnb1.best_solution
+    results[f'{alg_name}_init_sol_cost'] = trad_bnb1.best_cost
     s = time.time()
     trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60 * num_trials,
-                    bnb_type=0, depth_first=True)
+                    bnb_type=0, depth_first=depth_first)
     e = time.time()
-    results['trad_bnb1'].append(trad_bnb1.best_cost)
-    results['trad_bnb1_time'].append(e - s)
+    results[f'{alg_name}'].append(trad_bnb1.best_cost)
+    results[f'{alg_name}_time'].append(e - s)
 
 
-def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials):
-    results['trad_bnb2'] = []
-    results['trad_bnb2_time'] = []
+def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
+                  depth_first):
+    if depth_first:
+        alg_name = 'df_trad_bnb2'
+    else:
+        alg_name = 'trad_bnb2'
+    results[f'{alg_name}'] = []
+    results[f'{alg_name}_time'] = []
     trad_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
     _clear_cont_train_data(trad_bnb2)
-    results['trad_bnb2_init_sol'] = trad_bnb2.best_solution
-    results['trad_bnb2_init_sol_cost'] = trad_bnb2.best_cost
+    results[f'{alg_name}_init_sol'] = trad_bnb2.best_solution
+    results[f'{alg_name}_init_sol_cost'] = trad_bnb2.best_cost
     s = time.time()
     trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60, bnb_type=0,
-                    depth_first=True)
+                    depth_first=depth_first)
     e = time.time()
     trad_bnb2.persist()
-    results['trad_bnb2'].append(trad_bnb2.best_cost)
-    results['trad_bnb2_time'].append(e - s)
+    results[f'{alg_name}'].append(trad_bnb2.best_cost)
+    results[f'{alg_name}_time'].append(e - s)
     for _ in range(num_trials - 1):
-        class_name = trad_bnb2.__class__.__name__
+        class_name = trad_bnb2.name
         prior_params = load_latest_pckl(
             path1=f'Data/{class_name}/DailyObj', logger=trad_bnb2.logger)
         if trad_bnb2.params == prior_params:
@@ -269,11 +290,12 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials):
                 'TSP traditional branch and bound parameters have changed')
         s = time.time()
         trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                        time_limit=compute_time_mins * 60)
+                        time_limit=compute_time_mins * 60,
+                        depth_first=depth_first)
         e = time.time()
         trad_bnb2.persist()
-        results['trad_bnb2'].append(trad_bnb2.best_cost)
-        results['trad_bnb2_time'].append(e - s)
+        results[f'{alg_name}'].append(trad_bnb2.best_cost)
+        results[f'{alg_name}_time'].append(e - s)
 
 
 def run_tsp_experiments(num_cities=200, compute_time_mins=1, num_trials=3,
@@ -309,4 +331,4 @@ def run_tsp_experiments(num_cities=200, compute_time_mins=1, num_trials=3,
     run_trad_bnb2(city_graph, results, compute_time_mins, num_trials)
 
     # return results
-    return results
+    return city_graph, results
