@@ -24,19 +24,36 @@ LOG_ITERS = int(1e7)
 
 
 def clear_previous_data():
-    # clear previous data
+    # clear previous continuous training data
     if os.path.isdir('Data/'):
         shutil.rmtree(path='Data/')
+        print('Cleared previous continuous training data')
+    else:
+        print('No previous continuous training data found')
+
+    # clear previous city graph object
     if os.path.isfile('city_graph.obj'):
         os.remove('city_graph.obj')
+        print('Cleared previous city graph object')
+    else:
+        print('No previous city graph object found')
+
+    # clear previous experiment results object
     if os.path.isfile('exp_results.obj'):
         os.remove('exp_results.obj')
+        print('Cleared previous experiment results dictionary')
+    else:
+        print('No previous experiment results dictionary found')
+
+    print('Cleared previous experiment data')
 
 
 def _clear_cont_train_data(opt_prob_obj):
     # clear continuous training data from previous runs
     if os.path.isdir(f'Data/{opt_prob_obj.name}'):
         shutil.rmtree(path=f'Data/{opt_prob_obj.name}')
+        print('Cleared previous continuous training data for optimization '
+              + f'problem class with name {opt_prob_obj.name}')
 
 
 # function to get experiment graph and results dictionary
