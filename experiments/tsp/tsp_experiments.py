@@ -53,6 +53,7 @@ def get_exp_data(num_cities):
 # function to save experiment results dictionary
 def save_exp_results(exp_num, exp_results):
     pickle.dump(exp_results, open(f'exp{exp_num}_results.obj', 'wb'))
+    print('Saved experiment results dictionary')
 
 
 def run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p):
