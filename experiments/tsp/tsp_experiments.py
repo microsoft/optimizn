@@ -23,6 +23,16 @@ MAX_ITERS = int(1e20)  # very high bound on iterations
 LOG_ITERS = int(1e7)
 
 
+def clear_previous_data():
+    # clear previous data
+    if os.path.isdir('Data/'):
+        shutil.rmtree(path='Data/')
+    if os.path.isfile('city_graph.obj'):
+        os.remove('city_graph.obj')
+    if os.path.isfile('exp_results.obj'):
+        os.remove('exp_results.obj')
+
+
 def _clear_cont_train_data(opt_prob_obj):
     # clear continuous training data from previous runs
     if os.path.isdir(f'Data/{opt_prob_obj.name}'):
@@ -32,17 +42,17 @@ def _clear_cont_train_data(opt_prob_obj):
 # function to get experiment graph and results dictionary
 def get_exp_data(num_cities):
     # create/load experiment graph
-    if os.path.isfile(f'city_graph.obj'):
-        city_graph = pickle.load(open(f'city_graph.obj', 'rb'))
+    if os.path.isfile('city_graph.obj'):
+        city_graph = pickle.load(open('city_graph.obj', 'rb'))
         print('Loaded saved city graph')
     else:
         city_graph = CityGraph(num_cities)
-        pickle.dump(city_graph, open(f'city_graph.obj', 'wb'))
+        pickle.dump(city_graph, open('city_graph.obj', 'wb'))
         print('Created and saved new city graph')
 
     # create/load experiment results dictionary
-    if os.path.isfile(f'exp_results.obj'):
-        exp_results = pickle.load(open(f'exp_results.obj', 'rb'))
+    if os.path.isfile('exp_results.obj'):
+        exp_results = pickle.load(open('exp_results.obj', 'rb'))
         print('Loaded saved experiment results dictionary')
     else:
         exp_results = dict()
@@ -51,8 +61,8 @@ def get_exp_data(num_cities):
 
 
 # function to save experiment results dictionary
-def save_exp_results(exp_num, exp_results):
-    pickle.dump(exp_results, open(f'exp{exp_num}_results.obj', 'wb'))
+def save_exp_results(exp_results):
+    pickle.dump(exp_results, open('exp_results.obj', 'wb'))
     print('Saved experiment results dictionary')
 
 
