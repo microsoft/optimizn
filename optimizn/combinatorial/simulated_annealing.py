@@ -135,7 +135,19 @@ def make_copy(candidate):
 
 
 def s_curve(x, center, width):
-    return 1 / (1 + np.exp((x - center) / width))
+    # treat runtime warnings like errors, to catch overflow warnings
+    warnings.filterwarnings("error", category=RuntimeWarning)
+    try:
+        res = 1 / (1 + np.exp((x - center) / width))
+    except RuntimeWarning:
+        # overflow occurred
+        
+        # np.exp term in the denominator is very large and the result is very
+        # close to 0
+        res = 0
+    # reset warnings
+    warnings.resetwarnings()
+    return res
 
 
 def current_temperature(iter, s_curve_amplitude=4000,

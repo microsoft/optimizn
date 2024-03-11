@@ -3,6 +3,7 @@
 
 import random
 from optimizn.combinatorial.branch_and_bound import BnBProblem
+from copy import deepcopy
 
 
 class TravelingSalesmanProblem(BnBProblem):
@@ -43,22 +44,24 @@ class TravelingSalesmanProblem(BnBProblem):
         return path_cost
 
     def lbound(self, sol):
-        # sum of distances between cities in path and smallest distances
-        # to account for remaining cities and start city
+        # sum of distances between cities in path and k smallest
+        # remaining distance values (k = number of remaining cities + 1)
+        dist_vals = []
         num_cities_in_path = len(sol)
-        lb_path_cost = 0
         for i in range(num_cities_in_path - 1):
-            lb_path_cost += self.input_graph.dists[sol[i], sol[i + 1]]
+            dist_vals.append(self.input_graph.dists[sol[i], sol[i + 1]])
         if num_cities_in_path == self.input_graph.num_cities:
-            lb_path_cost += self.input_graph.dists[
-                sol[num_cities_in_path - 1], sol[0]]
+            dist_vals.append(self.input_graph.dists[
+                sol[num_cities_in_path - 1], sol[0]])
         elif num_cities_in_path == 0:
-            lb_path_cost += sum(self.sorted_dists[
-                :self.input_graph.num_cities])
+            dist_vals = self.sorted_dists[:self.input_graph.num_cities]
         else:
-            lb_path_cost += sum(self.sorted_dists[
-                :self.input_graph.num_cities - num_cities_in_path + 1])
-        return lb_path_cost
+            sorted_dist_vals = deepcopy(self.sorted_dists)
+            for val in dist_vals:
+                sorted_dist_vals.remove(val)
+            dist_vals += sorted_dist_vals[
+                :self.input_graph.num_cities - num_cities_in_path + 1]
+        return sum(dist_vals)
 
     def is_feasible(self, sol):
         # check that all cities covered once, path length is equal to the
