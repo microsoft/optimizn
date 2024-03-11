@@ -54,6 +54,9 @@ def _clear_cont_train_data(opt_prob_obj):
         shutil.rmtree(path=f'Data/{opt_prob_obj.name}')
         print('Cleared previous continuous training data for optimization '
               + f'problem class with name {opt_prob_obj.name}')
+    else:
+        print('No previous continuous training data for optimization '
+              + f'problem class with name {opt_prob_obj.name}')
 
 
 # function to get experiment graph and results dictionary
