@@ -18,6 +18,7 @@ class SimAnnealProblem(OptProblem):
         self.current_cost = make_copy(self.init_cost)
         self.total_iters = 0
         self.iters_since_reset = -1
+        self.total_time_elapsed = 0
 
     def next_candidate(self):
         ''' Switch to the next candidate.'''
@@ -38,6 +39,16 @@ class SimAnnealProblem(OptProblem):
         Defaults to current_temperature
         '''
         return current_temperature(iters)
+
+    def _log_results(self, iters, time_elapsed):
+        self.logger.info("Iterations (total): " + str(self.total_iters))
+        self.logger.info("Iterations (current): " + str(iters))
+        self.logger.info("Time elapsed (total): "
+                         + str(self.total_time_elapsed) + " seconds")
+        self.logger.info("Time elapsed (current): " + str(time_elapsed)
+                         + " seconds")
+        self.logger.info("Best solution: " + str(self.best_solution))
+        self.logger.info("Best solution cost: " + str(self.best_cost))
 
     def anneal(self, n_iter=100000, reset_p=1/10000, time_limit=3600,
                log_iters=10000):
@@ -63,21 +74,18 @@ class SimAnnealProblem(OptProblem):
         accessed 8-January-2024.
         '''
         reset = False
+        time_elapsed = 0
+        iters = 0
+        original_time_elapsed = self.total_time_elapsed
         start = time.time()
-        for i in range(n_iter):
+        for _ in range(n_iter):
             # check if time limit exceeded
-            if time.time() - start > time_limit:
-                self.logger.info('Time limit exceeded, terminating algorithm')
-                self.logger.info('Best solution: ' + str(self.best_cost))
+            if time_elapsed >= time_limit:
+                self.logger.info(
+                    'Time limit reached/exceeded, terminating algorithm')
                 break
             self.iters_since_reset = self.iters_since_reset + 1
             temp = self.get_temperature(self.iters_since_reset)
-            if i % int(log_iters) == 0:
-                self.logger.info(
-                    "Iterations (total): " + str(self.total_iters))
-                self.logger.info("Iterations (current): " + str(i))
-                self.logger.info("Best solution: " + str(self.best_solution))
-                self.logger.info("Best solution cost: " + str(self.best_cost))
             # eps = 0.3 * e**(-i/n_iter)
             if np.random.uniform() < reset_p:
                 self.logger.info("Resetting candidate solution.")
@@ -120,6 +128,15 @@ class SimAnnealProblem(OptProblem):
                 self.logger.info("Best cost updated to:" + str(self.new_cost))
             
             self.total_iters += 1
+            iters += 1
+            time_elapsed = time.time() - start
+            self.total_time_elapsed = original_time_elapsed + time_elapsed
+            if iters == 1 or iters % int(log_iters) == 0:
+                self._log_results(iters, time_elapsed)
+        
+        # log results, return best solution and best solution cost
+        self._log_results(iters, time_elapsed)
+        return self.best_solution, self.best_cost
 
     def update_candidate(self, candidate, cost):
         self.candidate = make_copy(candidate)

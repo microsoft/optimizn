@@ -190,16 +190,16 @@ class BnBProblem(OptProblem):
                             self.queue.put(
                                 (lbound, depth - 1, self.sol_count, next_sol))
 
-            # log best solution and min cost, update iterations count and
-            # time elapsed
+            # update iterations count and time elapsed
             iters += 1
             self.total_iters += 1
             time_elapsed = time.time() - start
             self.total_time_elapsed = original_total_time_elapsed +\
                 time_elapsed
+            # log best solution, best solution cost, and other info
             self._log_results(iters, log_iters, time_elapsed)
 
-        # return best solution and cost
+        # log results, return best solution and best solution cost
         self._log_results(iters, log_iters, time_elapsed, force=True)
         return self.best_solution, self.best_cost
 
