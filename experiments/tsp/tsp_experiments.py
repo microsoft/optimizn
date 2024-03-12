@@ -339,7 +339,7 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
 
 
 def run_tsp_experiments(num_cities=200, compute_time_mins=1, num_trials=3,
-                        reset_p=1/1000000):
+                        reset_p=1/5000000):
     # for collecting results
     results = dict()
 
