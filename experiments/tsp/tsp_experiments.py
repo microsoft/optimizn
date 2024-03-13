@@ -23,6 +23,7 @@ MAX_ITERS = int(1e20)  # very high bound on iterations
 LOG_ITERS = int(1e7)
 
 
+# function to clear all previous experiment data
 def clear_previous_data():
     # clear previous continuous training data
     if os.path.isdir('Data/'):
@@ -48,6 +49,7 @@ def clear_previous_data():
     print('Cleared previous experiment data')
 
 
+# function to clear previous continuous training data
 def _clear_cont_train_data(opt_prob_obj):
     # clear continuous training data from previous runs
     if os.path.isdir(f'Data/{opt_prob_obj.name}'):
@@ -94,6 +96,7 @@ def save_exp_results(exp_results):
     print('Saved experiment results dictionary')
 
 
+# function to run optimizn simulated annealing (single stretch)
 def run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p):
     tsp_o_sa1 = TravSalsmn(city_graph)
     results['o_sa1'] = [tsp_o_sa1.init_cost]
@@ -107,6 +110,7 @@ def run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p):
     results['o_sa1_time'].append(e - s)
 
 
+# function to run optimizn simulated annealing (continuous training)
 def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
     tsp_o_sa2 = TravSalsmn(city_graph)
     results['o_sa2'] = [tsp_o_sa2.init_cost]
@@ -141,6 +145,7 @@ def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
         results['o_sa2_time'].append(results['o_sa2_time'][-1] + e - s)
 
 
+# function to run python-tsp simulated annealing (single stretch)
 def run_pt_sa1(city_graph, results, compute_time_mins, num_trials):
     permutation = list(range(city_graph.num_cities))
     opt_permutation = permutation
@@ -171,6 +176,7 @@ def run_pt_sa1(city_graph, results, compute_time_mins, num_trials):
     print(f'Best solution cost: {opt_dist}')
 
 
+# run python-tsp simulated annealing (successive runs)
 def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
     permutation = list(range(city_graph.num_cities))
     opt_permutation = permutation
@@ -216,6 +222,7 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
         print(f'Best solution cost: {opt_dist}')
 
 
+# function to run optimizn modified branch and bound (single stretch)
 def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
                  depth_first):
     if depth_first:
@@ -234,6 +241,7 @@ def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
     results[f'{alg_name}_time'].append(e - s)
 
 
+# function to run optimizn modified branch and bound (continuous training)
 def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
                  depth_first):
     if depth_first:
@@ -277,6 +285,7 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
             results[f'{alg_name}_time'][-1] + e - s)
 
 
+# function to run optimizn traditional branch and bound (single stretch)
 def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
                   depth_first):
     if depth_first:
@@ -295,6 +304,7 @@ def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
     results[f'{alg_name}_time'].append(e - s)
 
 
+# function to run optimizn traditional branch and bound (continuous training)
 def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
                   depth_first):
     if depth_first:
@@ -336,39 +346,3 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
         results[f'{alg_name}'].append(trad_bnb2.best_cost)
         results[f'{alg_name}_time'].append(
             results[f'{alg_name}_time'][-1] + e - s)
-
-
-def run_tsp_experiments(num_cities=200, compute_time_mins=1, num_trials=3,
-                        reset_p=1/5000000):
-    # for collecting results
-    results = dict()
-
-    # create traveling salesman problem parameters
-    city_graph = CityGraph(num_cities)
-
-    # run optimizn simulated annealing (single stretch)
-    run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p)
-
-    # run optimizn simulated annealing (successive runs)
-    run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p)
-
-    # run python-tsp simulated annealing (single stretch)
-    run_pt_sa1(city_graph, results, compute_time_mins, num_trials)
-
-    # run python-tsp simulated annealing (successive runs)
-    run_pt_sa2(city_graph, results, compute_time_mins, num_trials)
-
-    # run optimizn modified branch and bound (single stretch)
-    run_mod_bnb1(city_graph, results, compute_time_mins, num_trials)
-
-    # run optimizn modified branch and bound (successive runs)
-    run_mod_bnb2(city_graph, results, compute_time_mins, num_trials)
-
-    # run optimizn traditional branch and bound (single stretch)
-    run_trad_bnb1(city_graph, results, compute_time_mins, num_trials)
-
-    # run optimizn traditional branch and bound (successive runs)
-    run_trad_bnb2(city_graph, results, compute_time_mins, num_trials)
-
-    # return results
-    return city_graph, results
