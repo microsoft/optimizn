@@ -53,7 +53,7 @@ class SimAnnealProblem(OptProblem):
     def anneal(self, n_iter=100000, reset_p=1/10000, time_limit=3600,
                log_iters=10000):
         '''
-        This simulated annealing algorithm is based on the following
+        This simulated annealing implementation is based on the following
         sources. The code presented in source [2] is licensed under the MIT
         License. The original license text is shown in the NOTICE.md file.
 
