@@ -4,7 +4,7 @@
 import numpy as np
 from copy import deepcopy
 from optimizn.combinatorial.simulated_annealing import SimAnnealProblem,\
-    s_curve_temperature
+    s_curve
 # from ortools.constraint_solver import routing_enums_pb2
 # from ortools.constraint_solver import pywrapcp
 
@@ -61,7 +61,7 @@ class TravSalsmn(SimAnnealProblem):
         return nu_candidate
     
     def get_temperature(self, iters):
-        return s_curve_temperature(iters, 4000, 0, 10000)
+        return s_curve(iters, 4000, 0, 10000)
 
 
 def dist_from_lat_long(lat1, long1, lat2, long2):

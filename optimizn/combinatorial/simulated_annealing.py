@@ -36,9 +36,9 @@ class SimAnnealProblem(OptProblem):
     def get_temperature(self, iters):
         '''
         Calculates the temperature based on a given number of iterations.
-        Defaults to current_temperature
+        Defaults to s_curve, can be overridden
         '''
-        return s_curve_temperature(iters)
+        return s_curve(iters)
 
     def _log_results(self, iters, time_elapsed):
         self.logger.info("Iterations (total): " + str(self.total_iters))
@@ -150,7 +150,7 @@ class SimAnnealProblem(OptProblem):
         return deepcopy(obj)
 
 
-def s_curve_temperature(x, amplitude=4000, center=0, width=3000):
+def s_curve(x, amplitude=4000, center=0, width=3000):
     # treat runtime warnings like errors, to catch overflow warnings
     warnings.filterwarnings("error", category=RuntimeWarning)
     try:
