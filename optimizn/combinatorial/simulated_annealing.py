@@ -14,8 +14,8 @@ class SimAnnealProblem(OptProblem):
     def __init__(self, params, logger=None):
         ''' Initialize the problem '''
         super().__init__(params, logger)
-        self.candidate = make_copy(self.init_solution)
-        self.current_cost = make_copy(self.init_cost)
+        self.candidate = self._make_copy(self.init_solution)
+        self.current_cost = self._make_copy(self.init_cost)
         self.total_iters = 0
         self.iters_since_reset = -1
         self.total_time_elapsed = 0
@@ -38,7 +38,7 @@ class SimAnnealProblem(OptProblem):
         Calculates the temperature based on a given number of iterations.
         Defaults to current_temperature
         '''
-        return current_temperature(iters)
+        return s_curve_temperature(iters)
 
     def _log_results(self, iters, time_elapsed):
         self.logger.info("Iterations (total): " + str(self.total_iters))
@@ -139,19 +139,18 @@ class SimAnnealProblem(OptProblem):
         return self.best_solution, self.best_cost
 
     def update_candidate(self, candidate, cost):
-        self.candidate = make_copy(candidate)
-        self.current_cost = make_copy(cost)
+        self.candidate = self._make_copy(candidate)
+        self.current_cost = self._make_copy(cost)
 
     def update_best(self, candidate, cost):
-        self.best_solution = make_copy(candidate)
-        self.best_cost = make_copy(cost)
+        self.best_solution = self._make_copy(candidate)
+        self.best_cost = self._make_copy(cost)
+
+    def _make_copy(self, obj):
+        return deepcopy(obj)
 
 
-def make_copy(candidate):
-    return deepcopy(candidate)
-
-
-def s_curve(x, center, width):
+def s_curve_temperature(x, amplitude=4000, center=0, width=3000):
     # treat runtime warnings like errors, to catch overflow warnings
     warnings.filterwarnings("error", category=RuntimeWarning)
     try:
@@ -164,9 +163,4 @@ def s_curve(x, center, width):
         res = 0
     # reset warnings
     warnings.resetwarnings()
-    return res
-
-
-def current_temperature(iter, s_curve_amplitude=4000,
-                        s_curve_center=0, s_curve_width=3000):
-    return s_curve_amplitude * s_curve(iter, s_curve_center, s_curve_width)
+    return amplitude * res
