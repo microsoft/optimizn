@@ -98,26 +98,32 @@ class SimAnnealProblem(OptProblem):
                 self.new_candidate = self.next_candidate(self.candidate)
                 self.new_cost = self.cost(self.new_candidate)
             cost_del = self.cost_delta(self.new_cost, self.current_cost)
-            # treat runtime warnings like errors, to catch overflow warnings
-            warnings.filterwarnings(
-                "error", category=RuntimeWarning)
-            try:
-                # see if overflow occurs
-                eps = np.exp(-1 * cost_del / temp)
-            except RuntimeWarning:
-                # overflow occurred
+            if temp <= 0:
+                # if temperature value is not greater than 0, candidate should
+                # not be updated to a less optimal new candidate
+                eps = 0
+            else:
+                # treat runtime warnings like errors, to catch overflow
+                # warnings
+                warnings.filterwarnings(
+                    "error", category=RuntimeWarning)
+                try:
+                    # see if overflow occurs
+                    eps = np.exp(-1 * cost_del / temp)
+                except RuntimeWarning:
+                    # overflow occurred
 
-                # if cost delta and temperature have the same sign, then
-                # eps will be very close to 0, so eps is set to 0
-                if (cost_del > 0 and temp > 0) or (cost_del < 0 and temp < 0):
-                    eps = 0
-                # if cost delta and temperature have opposite signs,
-                # then eps will be very large (larger than any value sampled
-                # from uniform distribution on [0, 1)), so eps is set to 1
-                else:
-                    eps = 1
-            # reset warnings
-            warnings.resetwarnings()
+                    # if cost delta is positive, then eps will be very close to
+                    # 0, so eps is set to 0
+                    if cost_del > 0:
+                        eps = 0
+                    # if cost delta is negative, then eps will be very large
+                    # (larger than any value sampled from uniform distribution
+                    # on [0, 1)), so eps is set to 1
+                    else:
+                        eps = 1
+                # reset warnings
+                warnings.resetwarnings()
 
             if cost_del < 0 or uniform() < eps or reset:
                 self.update_candidate(self.new_candidate, self.new_cost)
