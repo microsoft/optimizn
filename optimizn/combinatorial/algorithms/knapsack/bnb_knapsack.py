@@ -88,7 +88,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
 
     def branch(self, sol):
         if len(sol) >= len(self.weights):
-            return []
+            yield
 
         for val in [0, 1]:
             yield deepcopy(sol) + [val]

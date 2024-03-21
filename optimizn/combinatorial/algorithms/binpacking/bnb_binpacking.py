@@ -162,7 +162,7 @@ class BinPackingProblem(BnBProblem):
         last_item_idx = sol[1]
         next_item_idx = last_item_idx + 1
         if next_item_idx >= len(self.sorted_item_weights):
-            return []
+            yield
         next_item_weight, next_item = self.sorted_item_weights[
             next_item_idx]
 

@@ -45,11 +45,12 @@ class BnBProblem(OptProblem):
 
     def branch(self, sol):
         '''
-        Generates other solutions from a given solution (branching)
+        Generates other solutions from a given solution (branching), must
+        return a generator
         '''
         raise NotImplementedError(
             'Implement a branching method to produce other solutions from a '
-            + 'given solution')
+            + 'given solution, must return a generator')
 
     def is_feasible(self, sol):
         '''
@@ -161,7 +162,10 @@ class BnBProblem(OptProblem):
                 return
 
             # evaluate solutions obtained by branching on the current solution
-            for next_sol in next(sol_gen):
+            for next_sol in sol_gen:
+                if next_sol is None:
+                    # generator yielded nothing
+                    continue
                 next_sol_gen = self.branch(next_sol)
                 self.call_stack.append((next_sol, next_sol_gen))
                 _evaluate(next_sol, next_sol_gen)
