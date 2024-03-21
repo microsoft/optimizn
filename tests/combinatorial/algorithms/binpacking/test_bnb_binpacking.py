@@ -61,7 +61,8 @@ def test_constructor():
         assert bpp.best_solution[0] == expected, 'Incorrect allocation of '\
             + f'items to bins in initial solution. Expected: {expected}. '\
             + f'Actual: {bpp.best_solution[0]}'
-        assert bpp.best_solution[1] == -1, 'Incorrect value for index of '\
+        idx = len(bpp.sorted_item_weights) - 1
+        assert bpp.best_solution[1] == idx, 'Incorrect value for index of '\
             + f'last allocated item in sorted-by-decreasing-weight list of '\
             + f'items. Expected: -1. Actual: {bpp.best_solution[1]}'
 
@@ -70,11 +71,11 @@ def test_is_feasible():
     TEST_CASES = [
         # test case: (weights, capacity, solution, boolean for whether
         # solution is feasible)
-        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, -1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), False),
+        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, 2), True),
+        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 2), True),
+        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 2), False),
         ([1, 2, 3], 3, ({1: {3}, 2: {1}}, 1), False),
-        ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 1), False)
+        ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 2), False)
     ]
     for weights, capacity, sol, feasible in TEST_CASES:
         params = BinPackingParams(weights, capacity)
@@ -162,14 +163,14 @@ def test_complete_solution():
     TEST_CASES = [
         # test case: (weights, capacity, incomplete solution, completed
         # solution)
-        ([1, 2, 3], 3, ({1: {3}}, 0), ({1: {3}, 2: {1, 2}}, 0)),
-        ([7, 8, 2, 3], 15, ({1: {2}}, 0), ({1: {2, 1}, 2: {3, 4}}, 0)),
+        ([1, 2, 3], 3, ({1: {3}}, 0), ({1: {3}, 2: {1, 2}}, 2)),
+        ([7, 8, 2, 3], 15, ({1: {2}}, 0), ({1: {2, 1}, 2: {3, 4}}, 3)),
         ([1, 2, 3, 8, 9, 10, 4, 5, 6, 7], 16,
          ({1: {6}, 2: {5}, 3: {4}}, 2),
-         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 2)),
+         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 9)),
         ([1, 2, 3, 8, 9, 10, 4, 5, 6, 7], 16,
          (dict(), -1),
-         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, -1))
+         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 9))
     ]
     for weights, capacity, incomplete_sol, complete_sol in TEST_CASES:
         params = BinPackingParams(

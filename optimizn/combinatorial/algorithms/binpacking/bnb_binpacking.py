@@ -53,7 +53,8 @@ class BinPackingProblem(BnBProblem):
         super().__init__(params)
     
     def get_initial_solution(self):
-        return (self._pack_rem_items(dict(), -1), -1)
+        return (self._pack_rem_items(dict(), -1),
+                len(self.sorted_item_weights) - 1)
     
     def get_root(self):
         return (self._pack_rem_items(dict(), -1), -1)
@@ -195,6 +196,11 @@ class BinPackingProblem(BnBProblem):
 
     def is_feasible(self, sol):
         bin_packing = sol[0]
+        last_item_idx = sol[1]
+
+        # check that last item index corresponds to last item
+        if last_item_idx != len(self.sorted_item_weights) - 1:
+            return False
 
         # check that all items are packed
         items = set(reduce(
@@ -214,4 +220,6 @@ class BinPackingProblem(BnBProblem):
         return True
 
     def complete_solution(self, sol):
-        return (self._pack_rem_items(copy.deepcopy(sol[0]), sol[1]), sol[1])
+        return (
+            self._pack_rem_items(copy.deepcopy(sol[0]), sol[1]),
+            len(self.sorted_item_weights) - 1)

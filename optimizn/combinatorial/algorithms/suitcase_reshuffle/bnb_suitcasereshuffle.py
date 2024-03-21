@@ -45,7 +45,7 @@ class SuitcaseReshuffleProblem(BnBProblem):
         return weight_counts
 
     def get_initial_solution(self):
-        return (deepcopy(self.suitcases), -1)
+        return (deepcopy(self.suitcases), len(self.sorted_weights) - 1)
     
     def get_root(self):
         return (deepcopy(self.suitcases), -1)
@@ -66,6 +66,11 @@ class SuitcaseReshuffleProblem(BnBProblem):
 
     def is_feasible(self, sol):
         suitcases = sol[0].config
+
+        # check last item index
+        last_item_index = sol[1]
+        if last_item_index != len(self.sorted_weights) - 1:
+            return False
 
         # for each suitcase, weights and extra space must equal original
         # capacity
@@ -113,20 +118,20 @@ class SuitcaseReshuffleProblem(BnBProblem):
             suitcases[min_suitcase] = suitcases[min_suitcase][:-1] + [weight]\
                 + [suitcases[min_suitcase][-1] - weight]
         
-        return (SuitCases(suitcases), sol[1])
+        return (SuitCases(suitcases), len(self.sorted_weights) - 1)
 
 
     def branch(self, sol):
         last_item_idx = sol[1]
         if last_item_idx == -1:
-            # if last item index is -1 (initial solution), start from empty
+            # if last item index is -1 (root solution), start from empty
             # suitcases
             suitcases = []
             for capacity in self.capacities:
                 suitcases.append([capacity])
         elif last_item_idx == len(self.sorted_weights) - 1:
             # if last item has been packed, no further branching can be done
-            return []
+            yield
         else:
             suitcases = sol[0].config
 
@@ -135,13 +140,10 @@ class SuitcaseReshuffleProblem(BnBProblem):
         next_item_weight = self.sorted_weights[next_item_idx]
 
         # pack next item in each suitcase that can fit it
-        new_sols = []
         for i in range(len(suitcases)):
             extra_space = suitcases[i][-1]
             if extra_space >= next_item_weight:
                 new_suitcases = deepcopy(suitcases)
                 new_suitcases[i] = new_suitcases[i][:-1] + [next_item_weight]\
                     + [new_suitcases[i][-1] - next_item_weight]
-                new_sols.append((SuitCases(new_suitcases), next_item_idx))
-
-        return new_sols
+                yield (SuitCases(new_suitcases), next_item_idx)

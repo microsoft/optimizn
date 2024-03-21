@@ -8,17 +8,18 @@ from optimizn.combinatorial.algorithms.suitcase_reshuffle.suitcases\
     import SuitCases
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol_optimality, check_sol_vs_init_sol
+import inspect
 
 
 def test_constructor_get_root():
     TEST_CASES = [
         # test case: (suitcase configuration, expected suitcase capacities,
-        # expected cost of initial solution)
-        ([[7, 5, 1], [4, 6, 1]], [13, 11], -1),
-        ([[7, 5, 0], [4, 6, 2]], [12, 12], -2),
-        ([[7, 5, 1, 0], [4, 6, 0]], [13, 10], 0)
+        # expected cost of initial solution, expected sorted weights)
+        ([[7, 5, 1], [4, 6, 1]], [13, 11], -1, [7, 6, 5, 4]),
+        ([[7, 5, 0], [4, 6, 2]], [12, 12], -2, [7, 6, 5, 4]),
+        ([[7, 5, 1, 0], [4, 6, 0]], [13, 10], 0, [7, 6, 5, 4, 1])
     ]
-    for config, capacities, cost in TEST_CASES:
+    for config, capacities, cost, sorted_weights in TEST_CASES:
         srp = SuitcaseReshuffleProblem(SuitCases(config))
         init_sol = srp.best_solution
 
@@ -31,14 +32,20 @@ def test_constructor_get_root():
         init_caps = init_sol[0].capacities
         assert init_caps == capacities, 'Incorrect initial solution '\
             + f'capacities. Expected: {capacities}. Actual: {init_caps}'
+        
+        # check sorted weights
+        assert srp.sorted_weights == sorted_weights, 'Incorrect sorted '\
+            + f'weights. Expected: {sorted_weights}, Actual: '\
+            + f'{srp.sorted_weights}'
     
         # check initial solution
         init_suitcase_num = init_sol[1]
         assert srp.best_cost == cost, 'Incorrect initial solution cost. '\
             + f'Expected: {cost}. Actual: {srp.best_cost}'
-        assert init_suitcase_num == -1, 'Incorrect suitcase number '\
-            + 'in initial solution. Expected: -1. Actual: '\
-            + f'{init_suitcase_num}'
+        exp_suitcase_num = len(sorted_weights) - 1
+        assert init_suitcase_num == exp_suitcase_num, 'Incorrect suitcase '\
+            + f'number in initial solution. Expected: {exp_suitcase_num}. '\
+            + f'Actual: {init_suitcase_num}'
         
         # check root node solution
         root_sol = srp.get_root()
@@ -83,7 +90,7 @@ def test_is_feasible():
         # test case: (initial suitcases, solution, boolean for whether solution
         # is complete)
         (SuitCases([[7, 5, 1], [4, 6, 1]]),
-         (SuitCases([[7, 5, 1], [4, 6, 1]]), 0), True),
+         (SuitCases([[7, 5, 1], [4, 6, 1]]), 3), True),
         (SuitCases([[7, 5, 1], [4, 6, 1]]),
          (SuitCases([[7, 6], [11]]), 0), False
          # not complete solution since item with weight 5 is not in a suitcase
@@ -93,10 +100,10 @@ def test_is_feasible():
          # not complete solution since item with weight 5 is not in a suitcase
          ),
         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]),
-         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 0),
+         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 7),
          True),
         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]),
-         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 4),
+         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 7),
          True),
         (SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]),
          (SuitCases([[7, 6], [6, 4], [12, 12, 4], [11, 10, 2]]), 5),
@@ -120,7 +127,7 @@ def test_complete_solution():
         # complete solution)
         (SuitCases([[7, 5, 1], [4, 6, 1]]),
          (SuitCases([[7, 6], [11]]), 0),
-         (SuitCases([[7, 6, 0], [5, 4, 2]]), 0)
+         (SuitCases([[7, 6, 0], [5, 4, 2]]), 3)
          ),
         (SuitCases([[7, 5, 1], [4, 6, 1]]),
          (SuitCases([[7, 5, 1], [4, 6, 1]]), 3),
@@ -128,7 +135,7 @@ def test_complete_solution():
          ),
         (SuitCases([[7, 5, 1], [4, 6, 1], [3, 2, 1]]),
          (SuitCases([[7, 6, 0], [5, 6], [6]]), 2),
-         (SuitCases([[7, 6, 0], [5, 4, 2, 0], [3, 3]]), 2)
+         (SuitCases([[7, 6, 0], [5, 4, 2, 0], [3, 3]]), 5)
          ),
         (SuitCases([[7, 5, 1], [4, 6, 1], [3, 2, 1]]),
          (SuitCases([[7, 5, 1], [4, 6, 1], [3, 2, 1]]), 5),
@@ -187,7 +194,10 @@ def test_branch():
 
         # branch on solutions, check branched solutions
         new_sols = srp.branch(sol)
-        assert new_sols == branch_sols, 'Incorrect branched solutions. '\
+        assert inspect.isgenerator(new_sols), 'Branch function must return '\
+            + 'a generator'
+        new_sols_list = list(new_sols)
+        assert new_sols_list == branch_sols, 'Incorrect branched solutions. '\
             + f'Expected: {branch_sols}. Actual: {new_sols}'
 
 

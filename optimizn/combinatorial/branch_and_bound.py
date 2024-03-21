@@ -145,7 +145,7 @@ class BnBProblem(OptProblem):
                         self._update_best_solution(completed_sol)
             
             # check if a better solution could be obtained
-            if self.cost_delta(self.best_cost, self.lbound(sol)) < 0:
+            if self.cost_delta(self.best_cost, self.lbound(sol)) <= 0:
                 return
             
             # update iterations count and time elapsed, log results
