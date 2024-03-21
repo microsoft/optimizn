@@ -90,10 +90,8 @@ class ZeroOneKnapsackProblem(BnBProblem):
         if len(sol) >= len(self.weights):
             return []
 
-        new_sols = []
         for val in [0, 1]:
-            new_sols.append(deepcopy(sol) + [val])
-        return new_sols
+            yield deepcopy(sol) + [val]
 
     def is_feasible(self, sol):
         # check that array length is the same as the number of weights/values
