@@ -70,12 +70,13 @@ class BnBProblem(OptProblem):
         raise NotImplementedError(
             'Implement a method to complete an incomplete solution')
 
-    def _log_results(self, iters, log_iters, time_elapsed, force=False):
-        if force or iters == 1 or iters % int(log_iters) == 0:
-            self.logger.info(f'Iterations (current run): {iters}')
+    def _log_results(self, log_iters, force=False):
+        if force or self.current_iters % int(log_iters) == 0:
+            self.logger.info(f'Iterations (current run): {self.current_iters}')
             self.logger.info(f'Iterations (total): {self.total_iters}')
             self.logger.info(
-                f'Time elapsed (current run): {time_elapsed} seconds')
+                f'Time elapsed (current run): {self.current_time_elapsed} '
+                + 'seconds')
             self.logger.info(
                 f'Time elapsed (total): {self.total_time_elapsed} seconds')
             self.logger.info(f'Best solution: {self.best_solution}')
@@ -116,14 +117,15 @@ class BnBProblem(OptProblem):
 
         # initialization for current run
         start = time.time()
-        iters = 0
-        time_elapsed = 0
+        self.current_iters = 0
+        self.current_time_elapsed = 0
         original_total_time_elapsed = self.total_time_elapsed
-        terminate = False
+        self.terminate_early = False
 
         # helper function to check termination conditions
         def _terminate():
-            return iters >= iters_limit or time_elapsed >= time_limit
+            return self.current_iters >= iters_limit or\
+                self.current_time_elapsed >= time_limit
 
         # recursive helper function to evaluate a solution
         def _evaluate(sol, sol_gen):
@@ -143,22 +145,22 @@ class BnBProblem(OptProblem):
                         self._update_best_solution(completed_sol)
             
             # check if a better solution could be obtained
-            if self.cost_delta(self.best_cost, self.lbound(sol)) >= 0:
+            if self.cost_delta(self.best_cost, self.lbound(sol)) < 0:
                 return
             
             # update iterations count and time elapsed, log results
-            iters += 1
+            self.current_iters += 1
             self.total_iters += 1
-            time_elapsed = time.time() - start
+            self.current_time_elapsed = time.time() - start
             self.total_time_elapsed = original_total_time_elapsed +\
-                time_elapsed
-            self._log_results(iters, log_iters, time_elapsed)
+                self.current_time_elapsed
+            self._log_results(log_iters)
             
             # check termination conditions
             if _terminate():
                 self.logger.info(
                     'Iterations/time limit reached, terminating algorithm')
-                terminate = True
+                self.terminate_early = True
                 return
 
             # evaluate solutions obtained by branching on the current solution
@@ -171,7 +173,7 @@ class BnBProblem(OptProblem):
                 _evaluate(next_sol, next_sol_gen)
                 # do not remove solution from call stack if evaluation was
                 # terminated early
-                if terminate:
+                if self.terminate_early:
                     break
                 self.call_stack.pop()
         
@@ -188,7 +190,7 @@ class BnBProblem(OptProblem):
             _evaluate(sol, sol_gen)
             # do not remove solution from call stack if evaluation was
             # terminated early
-            if terminate:
+            if self.terminate_early:
                 break
             self.call_stack.pop()
         

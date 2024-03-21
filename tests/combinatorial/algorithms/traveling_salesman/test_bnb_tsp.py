@@ -8,7 +8,7 @@ from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp import\
 import numpy as np
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol_vs_init_sol
-from copy import deepcopy
+import inspect
 
 
 class MockCityGraph:
@@ -169,8 +169,12 @@ def test_branch():
     ]
     for sol, branch_sols in TEST_CASES:
         new_sols = tsp.branch(sol)
-        assert branch_sols == new_sols, 'Incorrect branched solutions for '\
-            + f'solution: {sol}. Expected: {branch_sols}, Actual: {new_sols}'
+        assert inspect.isgenerator(new_sols),\
+            'Branch function must return generator'
+        new_sols_list = list(new_sols)
+        assert branch_sols == new_sols_list, 'Incorrect branched solutions '\
+            + f'for solution: {sol}. Expected: {branch_sols}, Actual: '\
+            + f'{new_sols_list}'
 
 
 def test_get_root():
@@ -199,84 +203,3 @@ def test_bnb_tsp():
     check_sol_vs_init_sol(tsp1.best_cost, tsp1.init_cost)
     check_bnb_sol(tsp2, 1, params)
     check_sol_vs_init_sol(tsp2.best_cost, tsp2.init_cost)
-
-
-def test_depth_first():
-    # input params
-    graph = CityGraph()
-    graph.num_cities = 4
-    graph.dists = np.array([
-        [0, 1, 1, 2],
-        [1, 0, 2, 1],
-        [1, 2, 0, 1],
-        [2, 1, 1, 0]
-    ])
-    params = {
-        'input_graph': graph,
-    }
-
-    # depth first
-    tsp = TravelingSalesmanProblem(params)
-    assert not tsp.depth_first, 'Incorrect depth first setting. Expected: '\
-        + 'False. Actual: True'
-    tsp.solve(iters_limit=2, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=True)
-    assert tsp.depth_first, 'Incorrect depth first setting. Expected: True. '\
-        + 'Actual: False'
-    sols = []
-    while not tsp.queue.empty():
-        sols.append(tsp.queue.get()[-1])
-    exp_sols = [[0, 1, 3], [0, 1, 2], [0, 2], [0, 3]]
-    assert exp_sols == sols, 'Incorrect order of solutions. Expected: '\
-        + f'{exp_sols}. Actual: {sols}'
-    
-    # not depth first
-    tsp = TravelingSalesmanProblem(params)
-    assert not tsp.depth_first, 'Incorrect depth first setting. Expected: '\
-        + 'False. Actual: True'
-    tsp.solve(iters_limit=2, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=False)
-    assert not tsp.depth_first, 'Incorrect depth first setting. Expected: '\
-        + 'False. Actual: True'
-    sols = []
-    while not tsp.queue.empty():
-        sols.append(tsp.queue.get()[-1])
-    exp_sols = [[0, 1, 3], [0, 2], [0, 1, 2], [0, 3]]
-    assert exp_sols == sols, 'Incorrect order of solutions. Expected: '\
-        + f'{exp_sols}. Actual: {sols}'
-    
-    # check that queue ordering changes when depth first setting changes
-    # from False to True
-    tsp = TravelingSalesmanProblem(params)
-    tsp.solve(iters_limit=2, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=False)
-    assert not tsp.depth_first, 'Incorrect depth first setting. Expected: '\
-        + 'False. Actual: True'
-    tsp.solve(iters_limit=0, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=True)
-    assert tsp.depth_first, 'Incorrect depth first setting. Expected: True. '\
-        + 'Actual: False'
-    sols = []
-    while not tsp.queue.empty():
-        sols.append(tsp.queue.get()[-1])
-    exp_sols = [[0, 1, 3], [0, 1, 2], [0, 2], [0, 3]]
-    assert exp_sols == sols, 'Incorrect order of solutions. Expected: '\
-        + f'{exp_sols}. Actual: {sols}'
-
-    # check that queue ordering changes when depth first setting changes
-    # from True to False
-    tsp = TravelingSalesmanProblem(params)
-    tsp.solve(iters_limit=2, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=True)
-    assert tsp.depth_first, 'Incorrect depth first setting. Expected: True. '\
-        + 'Actual: False'
-    tsp.solve(iters_limit=0, time_limit=1e20, log_iters=1, bnb_type=0,
-              depth_first=False)
-    assert not tsp.depth_first, 'Incorrect depth first setting. Expected: '\
-        + 'False. Actual: True'
-    sols = []
-    while not tsp.queue.empty():
-        sols.append(tsp.queue.get()[-1])
-    exp_sols = [[0, 1, 3], [0, 2], [0, 1, 2], [0, 3]]
-    assert exp_sols == sols, 'Incorrect order of solutions. Expected: '\
-        + f'{exp_sols}. Actual: {sols}'

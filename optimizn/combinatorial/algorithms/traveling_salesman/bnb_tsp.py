@@ -79,8 +79,6 @@ class TravelingSalesmanProblem(BnBProblem):
         if len(sol) == self.input_graph.num_cities:
             return []
         visited = set(sol)
-        new_sols = []
         for new_city in range(self.input_graph.dists.shape[0]):
             if new_city not in visited:
-                new_sols.append(sol + [new_city])
-        return new_sols
+                yield sol + [new_city]
