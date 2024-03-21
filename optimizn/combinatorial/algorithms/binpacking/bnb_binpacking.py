@@ -170,7 +170,6 @@ class BinPackingProblem(BnBProblem):
         bin_packing = self._filter_items(bin_packing, last_item_idx)
 
         # pack items in bins
-        new_sols = []
         extra_bin = 1
         if len(bin_packing.keys()) != 0:
             extra_bin = max(bin_packing.keys()) + 1
@@ -192,8 +191,7 @@ class BinPackingProblem(BnBProblem):
 
             # pack item in bin
             new_bin_packing[bin].add(next_item)
-            new_sols.append((new_bin_packing, next_item_idx))
-        return new_sols
+            yield (new_bin_packing, next_item_idx)
 
     def is_feasible(self, sol):
         bin_packing = sol[0]

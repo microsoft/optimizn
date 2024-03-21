@@ -5,6 +5,7 @@ from optimizn.combinatorial.algorithms.binpacking.bnb_binpacking import\
     BinPackingParams, BinPackingProblem
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol_optimality, check_sol_vs_init_sol
+import inspect
 
 
 def test_param_equality():
@@ -146,12 +147,15 @@ def test_branch():
 
         # check branched solutions
         new_sols = bpp.branch(init_sol)
-        for new_sol in new_sols:
+        assert inspect.isgenerator(new_sols),\
+            'Branch function must return generator'
+        new_sols_list = list(new_sols)
+        for new_sol in new_sols_list:
             assert new_sol in expected, 'Unexpected solution produced by '\
                 + f'branching on solution {init_sol}: {new_sol}'
         for exp_sol in expected:
-            assert exp_sol in new_sols, f'Expected solution {exp_sol} was '\
-                + f'not produced by branching on solution {init_sol}'
+            assert exp_sol in new_sols_list, f'Expected solution {exp_sol}'\
+                + f' was not produced by branching on solution {init_sol}'
 
 
 def test_complete_solution():
