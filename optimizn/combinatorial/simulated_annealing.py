@@ -20,8 +20,8 @@ class SimAnnealProblem(OptProblem):
         self.iters_since_reset = -1
         self.total_time_elapsed = 0
 
-    def next_candidate(self):
-        ''' Switch to the next candidate.'''
+    def next_candidate(self, candidate):
+        ''' Switch to the next candidate, given the current candidate. '''
         raise NotImplementedError(
             "Implement a function to produce the next candidate solution "
             + "from the current candidate solution")
