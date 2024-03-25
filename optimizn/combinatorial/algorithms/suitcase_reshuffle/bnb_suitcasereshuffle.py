@@ -20,13 +20,13 @@ class SuitcaseReshuffleProblem(BnBProblem):
     that can fit it
     '''
 
-    def __init__(self, suitcases):
+    def __init__(self, suitcases, bnb_selection_strategy):
         self.config = suitcases.config
         self.capacities = suitcases.capacities
         self.suitcases = suitcases
         self.sorted_weights = self._get_weights(self.config, True)
         self.weight_counts = self._get_weight_counts(self.sorted_weights)
-        super().__init__(suitcases)
+        super().__init__(suitcases, bnb_selection_strategy)
 
     def _get_weights(self, suitcases, sort=False):
         weights = list(reduce(

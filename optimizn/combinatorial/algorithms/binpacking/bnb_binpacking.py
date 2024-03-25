@@ -42,7 +42,7 @@ class BinPackingProblem(BnBProblem):
     remaining items can be put in bins in decreasing order of weight, into
     the first bin that can fit it. New bins created as needed
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.item_weights = {}  # mapping of items to weights
         self.sorted_item_weights = []  # sorted (weight, item) tuples (desc)
         for i in range(1, len(params.weights) + 1):
@@ -50,7 +50,7 @@ class BinPackingProblem(BnBProblem):
             self.sorted_item_weights.append((params.weights[i - 1], i))
         self.sorted_item_weights.sort(reverse=True)
         self.capacity = params.capacity
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
     
     def get_initial_solution(self):
         return (self._pack_rem_items(dict(), -1),

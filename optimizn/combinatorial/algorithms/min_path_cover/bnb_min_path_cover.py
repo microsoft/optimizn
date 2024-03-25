@@ -32,13 +32,13 @@ class MinPathCoverProblem1(BnBProblem):
     vertices, then the branching only produces the solution where the path
     is omitted from the cover
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.edges1 = params.edges1
         self.edges2 = params.edges2
         self.vertices = set(params.edges1.flatten()).union(
             set(params.edges2.flatten()))
         self._get_all_paths()
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         return (np.ones(len(self.all_paths)), len(self.all_paths) - 1)
@@ -158,7 +158,7 @@ class MinPathCoverProblem2(BnBProblem):
 
     Assumes that the vertices are in sequential order (e.g. {0, 1, 2, ...})
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.edges1 = params.edges1
         self.edges2 = params.edges2
         self.vertices = set(params.edges1.flatten()).union(
@@ -174,7 +174,7 @@ class MinPathCoverProblem2(BnBProblem):
                         if vert not in self.cov_dict.keys():
                             self.cov_dict[vert] = set()
                         self.cov_dict[vert].add(path)
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         return (np.zeros((0, 3)), np.array(self.all_paths),

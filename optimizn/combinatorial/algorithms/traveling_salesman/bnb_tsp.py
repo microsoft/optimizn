@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 class TravelingSalesmanProblem(BnBProblem):
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.input_graph = params['input_graph']
         # sort all distance values, for computing lower bounds
         self.sorted_dists = []
@@ -15,7 +15,7 @@ class TravelingSalesmanProblem(BnBProblem):
             for j in range(0, i):
                 self.sorted_dists.append(self.input_graph.dists[i, j])
         self.sorted_dists.sort()
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         # path of cities in increasing, numerical order

@@ -40,7 +40,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
     Date published: February 26, 2018
     Date accessed: December 16, 2022
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.values = params.values
         self.weights = params.weights
         self.capacity = params.capacity
@@ -52,7 +52,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
             vw_ratios_ixs.append((vw_ratios[i], i))
         self.sorted_vw_ratios = sorted(vw_ratios_ixs)
         self.sorted_vw_ratios.reverse()
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         return self.complete_solution([])

@@ -4,28 +4,81 @@
 import time
 from optimizn.combinatorial.opt_problem import OptProblem
 import inspect
+from queue import PriorityQueue
+from enum import Enum
+
+
+class BnBSelectionStrategy(Enum):
+    DEPTH_FIRST = 'DEPTH_FIRST'
+    DEPTH_FIRST_BEST_FIRST = 'DEPTH_FIRST_BEST_FIRST'
+    BEST_FIRST = 'BEST_FIRST'
 
 
 class BnBProblem(OptProblem):
-    def __init__(self, params, logger=None):
-        # initialization
-        self.total_iters = 0
-        self.total_time_elapsed = 0
-        super().__init__(params, logger)
-
-        # check initial solution
-        if self.init_solution is not None and not self.is_feasible(
-                self.init_solution):
-            raise Exception('Initial solution is infeasible: '
-                            + f'{self.init_solution}')
-        
-        # initialize call stack with root solution
-        root_sol = self.get_root()
-        root_gen = self.branch(root_sol)
-        if not inspect.isgenerator(root_gen):
-            raise Exception('Branch method must return a generator')
-        self.call_stack = [(root_sol, root_gen)]
+    def __init__(self, params, bnb_selection_strategy, logger=None):
+        if not isinstance(bnb_selection_strategy, BnBSelectionStrategy):
+            raise Exception(
+                f'Invalid value for bnb_selection_strategy, must be one of '
+                + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST')
     
+        # initialize for depth-first branch and bound
+        self.bnb_selection_strategy = bnb_selection_strategy
+        if self.bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
+            # initialization
+            self.total_iters = 0
+            self.total_time_elapsed = 0
+            super().__init__({
+                    'params': params,
+                    'bnb_selection_strategy': bnb_selection_strategy
+                }, logger)
+
+            # check initial solution
+            if self.init_solution is not None and not self.is_feasible(
+                    self.init_solution):
+                raise Exception('Initial solution is infeasible: '
+                                + f'{self.init_solution}')
+            
+            # initialize call stack with root solution
+            root_sol = self.get_root()
+            root_gen = self.branch(root_sol)
+            if not inspect.isgenerator(root_gen):
+                raise Exception('Branch method must return a generator when '
+                                + 'running depth-first branch and bound')
+            self.call_stack = [(root_sol, root_gen)]
+        # initialize for depth-first-best-first or best-first branch and bound
+        elif self.bnb_selection_strategy in {
+                BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
+                BnBSelectionStrategy.BEST_FIRST}:
+            self.queue = PriorityQueue()
+            self.total_iters = 0
+            self.total_time_elapsed = 0
+            super().__init__(params, logger)
+            if self.init_solution is not None and not self.is_feasible(
+                    self.init_solution):
+                raise Exception('Initial solution is infeasible: '
+                                + f'{self.init_solution}')
+
+            self.sol_count = 1  # breaks ties between solutions with same lower
+            # bound and depth, solutions generated earlier are given priority
+
+            # put root solution onto PriorityQueue
+            root_sol = self.get_root()
+            if self.bnb_selection_strategy ==\
+                    BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+                self.queue.put(
+                    (0, self.lbound(root_sol), self.sol_count, root_sol))
+            else:
+                self.queue.put(
+                    (self.lbound(root_sol), 0, self.sol_count, root_sol))
+            # solution tuples consist of four values: lower bound, solution
+            # depth, solution count, solution
+        else:
+            raise Exception(
+                f'Invalid value for bnb_selection_strategy, must be one of '
+                + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST')
+
     def get_root(self):
         '''
         Produces the root solution, from which other solutions are obtainable
@@ -42,15 +95,14 @@ class BnBProblem(OptProblem):
         '''
         raise NotImplementedError(
             'Implement a method to compute a lower bound on a given solution')
-
+    
     def branch(self, sol):
         '''
-        Generates other solutions from a given solution (branching), must
-        return a generator
+        Generates other solutions from a given solution (branching)
         '''
         raise NotImplementedError(
             'Implement a branching method to produce other solutions from a '
-            + 'given solution, must return a generator')
+            + 'given solution')
 
     def is_feasible(self, sol):
         '''
@@ -65,7 +117,8 @@ class BnBProblem(OptProblem):
         '''
         Completes an incomplete solution for early detection of solutions
         that are potentially more optimal than the most optimal solution
-        already observed (only needed for modified branch and bound algorithm)
+        already observed (only needed for look-ahead branch and bound
+        algorithm)
         '''
         raise NotImplementedError(
             'Implement a method to complete an incomplete solution')
@@ -92,11 +145,11 @@ class BnBProblem(OptProblem):
                 f'Updated best solution to: {self.best_solution}')
             self.logger.info(
                 f'Updated best solution cost to: {self.best_cost}')
-
-    def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
-              bnb_type=0):
+    
+    def _solve_df(self, iters_limit, log_iters, time_limit, bnb_type):
         '''
-        This branch and bound implementation is based on the following sources.
+        This depth-first branch and bound implementation is based on the
+        following sources.
 
         This method executes either the traditional (bnb_type=0) or look-ahead
         (bnb_type=1) branch and bound algorithm. In traditional branch and
@@ -136,7 +189,7 @@ class BnBProblem(OptProblem):
                 self._update_best_solution(sol)
                 return
             else:
-                # if algorithm type is 1 (modified branch and bound), then
+                # if algorithm type is 1 (look-ahead branch and bound), then
                 # complete solution and update best solution and best
                 # solution cost if needed
                 if bnb_type == 1:
@@ -195,4 +248,133 @@ class BnBProblem(OptProblem):
             self.call_stack.pop()
         
         # return best solution and best solution cost
+        self._log_results(log_iters, force=True)
         return self.best_solution, self.best_cost
+
+    def _solve_dfbf(self, iters_limit, log_iters, time_limit, bnb_type):
+        '''
+        This depth-first and/or best-first branch and bound implementation is
+        based on the following sources.
+
+        This method executes either the traditional (bnb_type=0) or look-ahead
+        (bnb_type=1) branch and bound algorithm. In traditional branch and
+        bound, partial solutions are not completed and are not evaluated
+        against the current best solution, while in look-ahead branch
+        and bound, they are.
+
+        Sources:
+
+        [1] J. Clausen, "Branch and bound algorithms - principles and
+        examples.." https://imada.sdu.dk/u/jbj/heuristikker/TSPtext.pdf,
+        March 1999. Online; accessed 16-December-2022.
+
+        [2] A. Bari, "7.2 0/1 knapsack using branch and bound."
+        https://www.youtube.com/watch?v=yV1d-b_NeK8, February 2018. Online;
+        accessed 16-December-2022.
+        '''
+        # initialization
+        start = time.time()
+        self.current_iters = 0
+        self.current_time_elapsed = 0
+        original_total_time_elapsed = self.total_time_elapsed
+
+        # if problem class instance is loaded, queue is saved as list, so
+        # convert back to PriorityQueue
+        if type(self.queue) is not PriorityQueue:
+            queue = PriorityQueue()
+            for item in self.queue:
+                queue.put(item)
+            self.queue = queue
+
+        # explore solutions
+        while not self.queue.empty() and self.current_iters < iters_limit and\
+                self.current_time_elapsed < time_limit:
+            # get solution, skip if lower bound is not less than best solution
+            # cost
+            if self.bnb_selection_strategy ==\
+                    BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+                depth, lbound, _, curr_sol = self.queue.get()
+            elif self.bnb_selection_strategy ==\
+                    BnBSelectionStrategy.BEST_FIRST:
+                lbound, depth, _, curr_sol = self.queue.get()
+            else:
+                raise Exception(
+                    'Invalid value for bnb_selection_strategy, '
+                    + 'must be one of the following: '
+                    + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
+                    + ', BnBSelectionStrategy.BEST_FIRST')
+            if self.cost_delta(self.best_cost, lbound) <= 0:
+                continue
+
+            # get and process branched solutions
+            next_sols = self.branch(curr_sol)
+            for next_sol in next_sols:
+                # process branched solution
+                if self.is_feasible(next_sol):
+                    # if solution is feasible, update best solution and best
+                    # solution cost if needed
+                    self._update_best_solution(next_sol)
+                else:
+                    # if algorithm type is 1 (look-ahead branch and bound),
+                    # then complete solution and update best solution and best
+                    # solution cost if needed
+                    if bnb_type == 1:
+                        completed_sol = self.complete_solution(next_sol)
+                        if self.is_feasible(completed_sol):
+                            self._update_best_solution(completed_sol)
+
+                    # if lower bound is less than best solution cost, put
+                    # incomplete solution into queue
+                    lbound = self.lbound(next_sol)
+                    if self.cost_delta(self.best_cost, lbound) > 0:
+                        self.sol_count += 1
+                        if self.bnb_selection_strategy ==\
+                                BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+                            self.queue.put(
+                                (depth - 1, lbound, self.sol_count, next_sol))
+                        elif self.bnb_selection_strategy ==\
+                                BnBSelectionStrategy.BEST_FIRST:
+                            self.queue.put(
+                                (lbound, depth - 1, self.sol_count, next_sol))
+                        else:
+                            raise Exception(
+                                'Invalid value for bnb_selection_strategy, '
+                                + 'must be one of the following: '
+                                + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
+                                + ', BnBSelectionStrategy.BEST_FIRST')
+
+            # update iterations count and time elapsed
+            self.current_iters += 1
+            self.total_iters += 1
+            self.current_time_elapsed = time.time() - start
+            self.total_time_elapsed = original_total_time_elapsed +\
+                self.current_time_elapsed
+            # log best solution, best solution cost, and other info
+            self._log_results(log_iters)
+
+        # log results, return best solution and best solution cost
+        self._log_results(log_iters, force=True)
+        return self.best_solution, self.best_cost
+
+    def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
+              bnb_type=0):
+        if self.bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
+            return self._solve_df(iters_limit, log_iters, time_limit, bnb_type)
+        elif self.bnb_selection_strategy in {
+                BnBSelectionStrategy.BEST_FIRST,
+                BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST}:
+            return self._solve_dfbf(
+                iters_limit, log_iters, time_limit, bnb_type)
+        else:
+            raise Exception(
+                f'Invalid value for bnb_selection_strategy, must be one of '
+                + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST') 
+
+    def persist(self):
+        if self.bnb_selection_strategy in {
+                BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
+                BnBSelectionStrategy.BEST_FIRST}:
+            # convert the queue to a list before saving solution
+            self.queue = list(self.queue.queue)
+        super().persist()
