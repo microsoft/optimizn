@@ -30,42 +30,41 @@ def test_constructor():
         ([1, 2, 3], 3, {1: {3}, 2: {1, 2}}),
         ([7, 8, 2, 3], 15, {1: {2, 1}, 2: {4, 3}})
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, expected in TEST_CASES:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, expected in TEST_CASES:
+        params = BinPackingParams(weights, capacity)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check capacity
-            assert bpp.capacity == capacity, 'Incorrect capacity. Expected: '\
-                + f'{capacity}. Actual: {bpp.capacity}'
+        # check capacity
+        assert bpp.capacity == capacity, 'Incorrect capacity. Expected: '\
+            + f'{capacity}. Actual: {bpp.capacity}'
 
-            # check item weights
-            for i in range(len(weights)):
-                assert bpp.item_weights[i + 1] == weights[i], 'Incorrect weight '\
-                    + f'for item {i + 1}. Expected: {weights[i]}. Actual: '\
-                    + f'{bpp.item_weights[i + 1]}'
+        # check item weights
+        for i in range(len(weights)):
+            assert bpp.item_weights[i + 1] == weights[i], 'Incorrect weight '\
+                + f'for item {i + 1}. Expected: {weights[i]}. Actual: '\
+                + f'{bpp.item_weights[i + 1]}'
 
-            # check sorted item weights
-            for i in range(len(bpp.sorted_item_weights)):
-                weight, item = bpp.sorted_item_weights[i]
-                assert bpp.item_weights[item] == weight, 'Incorrect weight for '\
-                    + f'item {item}. Expected {weight}. Actual: '\
-                    + f'{bpp.item_weights[item]}'
-                if i > 0:
-                    assert weight <= bpp.sorted_item_weights[i - 1][0], 'Item '\
-                        + f'weights not sorted in descending order. Element at '\
-                        + f'index {i} in sorted list of item weights ({weight}) '\
-                        + f'is greater than element at index {i - 1} '\
-                        + f'({bpp.sorted_item_weights[i - 1][0]})'
+        # check sorted item weights
+        for i in range(len(bpp.sorted_item_weights)):
+            weight, item = bpp.sorted_item_weights[i]
+            assert bpp.item_weights[item] == weight, 'Incorrect weight for '\
+                + f'item {item}. Expected {weight}. Actual: '\
+                + f'{bpp.item_weights[item]}'
+            if i > 0:
+                assert weight <= bpp.sorted_item_weights[i - 1][0], 'Item '\
+                    + f'weights not sorted in descending order. Element at '\
+                    + f'index {i} in sorted list of item weights ({weight}) '\
+                    + f'is greater than element at index {i - 1} '\
+                    + f'({bpp.sorted_item_weights[i - 1][0]})'
 
-            # check initial solution
-            assert bpp.best_solution[0] == expected, 'Incorrect allocation of '\
-                + f'items to bins in initial solution. Expected: {expected}. '\
-                + f'Actual: {bpp.best_solution[0]}'
-            idx = len(bpp.sorted_item_weights) - 1
-            assert bpp.best_solution[1] == idx, 'Incorrect value for index of '\
-                + f'last allocated item in sorted-by-decreasing-weight list of '\
-                + f'items. Expected: -1. Actual: {bpp.best_solution[1]}'
+        # check initial solution
+        assert bpp.best_solution[0] == expected, 'Incorrect allocation of '\
+            + f'items to bins in initial solution. Expected: {expected}. '\
+            + f'Actual: {bpp.best_solution[0]}'
+        idx = len(bpp.sorted_item_weights) - 1
+        assert bpp.best_solution[1] == idx, 'Incorrect value for index of '\
+            + f'last allocated item in sorted-by-decreasing-weight list of '\
+            + f'items. Expected: -1. Actual: {bpp.best_solution[1]}'
 
 
 def test_is_feasible():
@@ -78,16 +77,15 @@ def test_is_feasible():
         ([1, 2, 3], 3, ({1: {3}, 2: {1}}, 1), False),
         ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 2), False)
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, sol, feasible in TEST_CASES:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, sol, feasible in TEST_CASES:
+        params = BinPackingParams(weights, capacity)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check completeness
-            is_feasible = bpp.is_feasible(sol)
-            assert is_feasible == feasible, 'Feasibility check failed for '\
-                + f'solution {sol}. Expected to be feasible: {feasible}. '\
-                + f'Actually feasible: {is_feasible}'
+        # check completeness
+        is_feasible = bpp.is_feasible(sol)
+        assert is_feasible == feasible, 'Feasibility check failed for '\
+            + f'solution {sol}. Expected to be feasible: {feasible}. '\
+            + f'Actually feasible: {is_feasible}'
 
 
 def test_cost():
@@ -98,15 +96,14 @@ def test_cost():
         ([1, 2, 3], 3, ({1: {2}, 2: {3}, 3: {1}}, 2), 3),
         ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 2), 3)
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, sol, cost in TEST_CASES:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, sol, cost in TEST_CASES:
+        params = BinPackingParams(weights, capacity)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check cost
-            sol_cost = bpp.cost(sol)
-            assert sol_cost == cost, f'Incorrect cost of solution {sol}. '\
-                + f'Expected: {cost}. Actual: {sol_cost}'
+        # check cost
+        sol_cost = bpp.cost(sol)
+        assert sol_cost == cost, f'Incorrect cost of solution {sol}. '\
+            + f'Expected: {cost}. Actual: {sol_cost}'
 
 
 def test_lbound():
@@ -118,15 +115,14 @@ def test_lbound():
         ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), 2),
         ([1, 2, 3], 3, ({1: {3}, 2: {2, 1}}, 2), 2)
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, sol, lb in TEST_CASES:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, sol, lb in TEST_CASES:
+        params = BinPackingParams(weights, capacity)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check lower bounds
-            lbound = bpp.lbound(sol)
-            assert lbound == lb, f'Incorrect lower bound for solution {sol}. '\
-                + f'Expected: {lb}. Actual: {lbound}'
+        # check lower bounds
+        lbound = bpp.lbound(sol)
+        assert lbound == lb, f'Incorrect lower bound for solution {sol}. '\
+            + f'Expected: {lb}. Actual: {lbound}'
 
 
 def test_branch():
@@ -146,22 +142,21 @@ def test_branch():
         ([1, 2, 3, 8, 9, 10, 4, 5, 6, 7], 16, [({1: {6}, 2: {5}}, 1)],
          ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 0))
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, expected, init_sol in TEST_CASES:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, expected, init_sol in TEST_CASES:
+        params = BinPackingParams(weights, capacity)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check branched solutions
-            new_sols = bpp.branch(init_sol)
-            assert inspect.isgenerator(new_sols),\
-                'Branch function must return generator'
-            new_sols_list = list(new_sols)
-            for new_sol in new_sols_list:
-                assert new_sol in expected, 'Unexpected solution produced by '\
-                    + f'branching on solution {init_sol}: {new_sol}'
-            for exp_sol in expected:
-                assert exp_sol in new_sols_list, f'Expected solution {exp_sol}'\
-                    + f' was not produced by branching on solution {init_sol}'
+        # check branched solutions
+        new_sols = bpp.branch(init_sol)
+        assert inspect.isgenerator(new_sols),\
+            'Branch function must return generator'
+        new_sols_list = list(new_sols)
+        for new_sol in new_sols_list:
+            assert new_sol in expected, 'Unexpected solution produced by '\
+                + f'branching on solution {init_sol}: {new_sol}'
+        for exp_sol in expected:
+            assert exp_sol in new_sols_list, f'Expected solution {exp_sol}'\
+                + f' was not produced by branching on solution {init_sol}'
 
 
 def test_complete_solution():
@@ -177,19 +172,18 @@ def test_complete_solution():
          (dict(), -1),
          ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 9))
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for weights, capacity, incomplete_sol, complete_sol in TEST_CASES:
-            params = BinPackingParams(
-                weights,
-                capacity
-            )
-            bpp = BinPackingProblem(params, bnb_selection_strategy)
+    for weights, capacity, incomplete_sol, complete_sol in TEST_CASES:
+        params = BinPackingParams(
+            weights,
+            capacity
+        )
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check completed solution
-            sol = bpp.complete_solution(incomplete_sol)
-            assert sol == complete_sol, 'Incorrect completed solution created '\
-                + f'from incomplete solution {incomplete_sol}. Expected: '\
-                + f'{complete_sol}. Actual: {sol}'
+        # check completed solution
+        sol = bpp.complete_solution(incomplete_sol)
+        assert sol == complete_sol, 'Incorrect completed solution created '\
+            + f'from incomplete solution {incomplete_sol}. Expected: '\
+            + f'{complete_sol}. Actual: {sol}'
 
 
 def test_bnb_binpacking():
@@ -212,5 +206,6 @@ def test_bnb_binpacking():
                 check_bnb_sol(bpp, bnb_type, params)
                 check_sol_vs_init_sol(bpp.best_cost, bpp.init_cost)
 
-                # check if final solution was within 1.5 * optimal solution cost
+                # check if final solution was within 1.5 * optimal solution
+                # cost
                 check_sol_optimality(bpp.best_cost, min_bins, 1.5)

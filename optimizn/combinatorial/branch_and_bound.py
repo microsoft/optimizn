@@ -11,7 +11,7 @@ from enum import Enum
 class BnBSelectionStrategy(Enum):
     DEPTH_FIRST = 'DEPTH_FIRST'
     DEPTH_FIRST_BEST_FIRST = 'DEPTH_FIRST_BEST_FIRST'
-    BEST_FIRST = 'BEST_FIRST'
+    BEST_FIRST_DEPTH_FIRST = 'BEST_FIRST_DEPTH_FIRST'
 
 
 class BnBProblem(OptProblem):
@@ -49,7 +49,7 @@ class BnBProblem(OptProblem):
         # initialize for depth-first-best-first or best-first branch and bound
         elif self.bnb_selection_strategy in {
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
-                BnBSelectionStrategy.BEST_FIRST}:
+                BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST}:
             self.queue = PriorityQueue()
             self.total_iters = 0
             self.total_time_elapsed = 0
@@ -77,7 +77,7 @@ class BnBProblem(OptProblem):
             raise Exception(
                 f'Invalid value for bnb_selection_strategy, must be one of '
                 + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
-                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST')
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST_DEPTH_FIRST')
 
     def get_root(self):
         '''
@@ -251,7 +251,7 @@ class BnBProblem(OptProblem):
         self._log_results(log_iters, force=True)
         return self.best_solution, self.best_cost
 
-    def _solve_dfbf(self, iters_limit, log_iters, time_limit, bnb_type):
+    def _solve_dfbf_bfdf(self, iters_limit, log_iters, time_limit, bnb_type):
         '''
         This depth-first and/or best-first branch and bound implementation is
         based on the following sources.
@@ -295,14 +295,14 @@ class BnBProblem(OptProblem):
                     BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
                 depth, lbound, _, curr_sol = self.queue.get()
             elif self.bnb_selection_strategy ==\
-                    BnBSelectionStrategy.BEST_FIRST:
+                    BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
                 lbound, depth, _, curr_sol = self.queue.get()
             else:
                 raise Exception(
                     'Invalid value for bnb_selection_strategy, '
                     + 'must be one of the following: '
                     + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
-                    + ', BnBSelectionStrategy.BEST_FIRST')
+                    + ', BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST')
             if self.cost_delta(self.best_cost, lbound) <= 0:
                 continue
 
@@ -333,7 +333,7 @@ class BnBProblem(OptProblem):
                             self.queue.put(
                                 (depth - 1, lbound, self.sol_count, next_sol))
                         elif self.bnb_selection_strategy ==\
-                                BnBSelectionStrategy.BEST_FIRST:
+                                BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
                             self.queue.put(
                                 (lbound, depth - 1, self.sol_count, next_sol))
                         else:
@@ -341,7 +341,8 @@ class BnBProblem(OptProblem):
                                 'Invalid value for bnb_selection_strategy, '
                                 + 'must be one of the following: '
                                 + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
-                                + ', BnBSelectionStrategy.BEST_FIRST')
+                                + ', BnBSelectionStrategy.'
+                                + 'BEST_FIRST_DEPTH_FIRST')
 
             # update iterations count and time elapsed
             self.current_iters += 1
@@ -361,20 +362,20 @@ class BnBProblem(OptProblem):
         if self.bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
             return self._solve_df(iters_limit, log_iters, time_limit, bnb_type)
         elif self.bnb_selection_strategy in {
-                BnBSelectionStrategy.BEST_FIRST,
+                BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST,
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST}:
-            return self._solve_dfbf(
+            return self._solve_dfbf_bfdf(
                 iters_limit, log_iters, time_limit, bnb_type)
         else:
             raise Exception(
                 f'Invalid value for bnb_selection_strategy, must be one of '
                 + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
-                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST') 
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST_DEPTH_FIRST')
 
     def persist(self):
         if self.bnb_selection_strategy in {
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
-                BnBSelectionStrategy.BEST_FIRST}:
+                BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST}:
             # convert the queue to a list before saving solution
             self.queue = list(self.queue.queue)
         super().persist()

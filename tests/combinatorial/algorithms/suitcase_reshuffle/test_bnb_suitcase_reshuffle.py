@@ -3,7 +3,6 @@
 
 from optimizn.combinatorial.algorithms.suitcase_reshuffle.bnb_suitcasereshuffle\
     import SuitcaseReshuffleProblem
-from copy import deepcopy
 from optimizn.combinatorial.algorithms.suitcase_reshuffle.suitcases\
     import SuitCases
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
@@ -20,44 +19,43 @@ def test_constructor_get_root():
         ([[7, 5, 0], [4, 6, 2]], [12, 12], -2, [7, 6, 5, 4]),
         ([[7, 5, 1, 0], [4, 6, 0]], [13, 10], 0, [7, 6, 5, 4, 1])
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for config, capacities, cost, sorted_weights in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(
-                SuitCases(config), bnb_selection_strategy)
-            init_sol = srp.best_solution
+    for config, capacities, cost, sorted_weights in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            SuitCases(config), BnBSelectionStrategy.DEPTH_FIRST)
+        init_sol = srp.best_solution
 
-            # check config
-            init_config = init_sol[0].config
-            assert init_config == config, 'Incorrect initial solution configs. '\
-                + f'Expected: {config}. Actual: {init_config}'
-            
-            # check capacities
-            init_caps = init_sol[0].capacities
-            assert init_caps == capacities, 'Incorrect initial solution '\
-                + f'capacities. Expected: {capacities}. Actual: {init_caps}'
-            
-            # check sorted weights
-            assert srp.sorted_weights == sorted_weights, 'Incorrect sorted '\
-                + f'weights. Expected: {sorted_weights}, Actual: '\
-                + f'{srp.sorted_weights}'
+        # check config
+        init_config = init_sol[0].config
+        assert init_config == config, 'Incorrect initial solution configs. '\
+            + f'Expected: {config}. Actual: {init_config}'
         
-            # check initial solution
-            init_suitcase_num = init_sol[1]
-            assert srp.best_cost == cost, 'Incorrect initial solution cost. '\
-                + f'Expected: {cost}. Actual: {srp.best_cost}'
-            exp_suitcase_num = len(sorted_weights) - 1
-            assert init_suitcase_num == exp_suitcase_num, 'Incorrect suitcase '\
-                + f'number in initial solution. Expected: {exp_suitcase_num}. '\
-                + f'Actual: {init_suitcase_num}'
-            
-            # check root node solution
-            root_sol = srp.get_root()
-            root_sol_cost = srp.cost(root_sol)
-            assert root_sol_cost == cost, 'Incorrect root node solution cost. '\
-                + f'Expected: {cost}. Actual: {root_sol_cost}'
-            assert root_sol[1] == -1, 'Incorrect suitcase number (for '\
-                + 'branching) in root node solution. Expected: -1. Actual: '\
-                + f'{root_sol[1]}'
+        # check capacities
+        init_caps = init_sol[0].capacities
+        assert init_caps == capacities, 'Incorrect initial solution '\
+            + f'capacities. Expected: {capacities}. Actual: {init_caps}'
+        
+        # check sorted weights
+        assert srp.sorted_weights == sorted_weights, 'Incorrect sorted '\
+            + f'weights. Expected: {sorted_weights}, Actual: '\
+            + f'{srp.sorted_weights}'
+    
+        # check initial solution
+        init_suitcase_num = init_sol[1]
+        assert srp.best_cost == cost, 'Incorrect initial solution cost. '\
+            + f'Expected: {cost}. Actual: {srp.best_cost}'
+        exp_suitcase_num = len(sorted_weights) - 1
+        assert init_suitcase_num == exp_suitcase_num, 'Incorrect suitcase '\
+            + f'number in initial solution. Expected: {exp_suitcase_num}. '\
+            + f'Actual: {init_suitcase_num}'
+        
+        # check root node solution
+        root_sol = srp.get_root()
+        root_sol_cost = srp.cost(root_sol)
+        assert root_sol_cost == cost, 'Incorrect root node solution cost. '\
+            + f'Expected: {cost}. Actual: {root_sol_cost}'
+        assert root_sol[1] == -1, 'Incorrect suitcase number (for '\
+            + 'branching) in root node solution. Expected: -1. Actual: '\
+            + f'{root_sol[1]}'
 
 
 def test_cost():
@@ -67,12 +65,12 @@ def test_cost():
         ((SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 1), -4),
         ((SuitCases([[7, 5, 1], [4, 6, 1], [12, 12, 4], [11, 10, 2]]), 2), -4)
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for sol, cost in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(sol[0], bnb_selection_strategy)
-            sol_cost = srp.cost(sol)
-            assert sol_cost == cost, f'Computed cost of solution {sol} is '\
-                + f'incorrect. Expected: {cost}. Actual: {sol_cost}'
+    for sol, cost in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            sol[0], BnBSelectionStrategy.DEPTH_FIRST)
+        sol_cost = srp.cost(sol)
+        assert sol_cost == cost, f'Computed cost of solution {sol} is '\
+            + f'incorrect. Expected: {cost}. Actual: {sol_cost}'
 
 
 def test_lbound():
@@ -82,12 +80,12 @@ def test_lbound():
         ((SuitCases([[7, 5, 3], [4, 6, 1]]), 0), -4),
         ((SuitCases([[7, 5, 1], [4, 6, 4]]), 0), -5)
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for sol, lbound in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(sol[0], bnb_selection_strategy)
-            sol_lb = srp.lbound(sol)
-            assert sol_lb == lbound, f'Computed cost of solution {sol} is '\
-                + f'incorrect. Expected: {lbound}. Actual: {sol_lb}'
+    for sol, lbound in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            sol[0], BnBSelectionStrategy.DEPTH_FIRST)
+        sol_lb = srp.lbound(sol)
+        assert sol_lb == lbound, f'Computed cost of solution {sol} is '\
+            + f'incorrect. Expected: {lbound}. Actual: {sol_lb}'
 
 
 def test_is_feasible():
@@ -117,14 +115,14 @@ def test_is_feasible():
          # suitcases
          )
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for init_sc, sol, feasible_sol in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(init_sc, bnb_selection_strategy)
+    for init_sc, sol, feasible_sol in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            init_sc, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check feasibility of solution
-            is_feasible = srp.is_feasible(sol)
-            assert feasible_sol == is_feasible, 'Feasibility check of solution '\
-                + f'{sol} failed. Expected: {feasible_sol}. Actual: {is_feasible}'
+        # check feasibility of solution
+        is_feasible = srp.is_feasible(sol)
+        assert feasible_sol == is_feasible, 'Feasibility check of solution '\
+            + f'{sol} failed. Expected: {feasible_sol}. Actual: {is_feasible}'
 
 
 def test_complete_solution():
@@ -148,15 +146,15 @@ def test_complete_solution():
          (SuitCases([[7, 5, 1], [4, 6, 1], [3, 2, 1]]), 5)
          )
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for suitcases, sol, exp_comp_sol in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(suitcases, bnb_selection_strategy)
+    for suitcases, sol, exp_comp_sol in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            suitcases, BnBSelectionStrategy.DEPTH_FIRST)
 
-            # check completed solution
-            comp_sol = srp.complete_solution(sol)
-            assert comp_sol == exp_comp_sol, 'Incorrect complete solution formed '\
-                + f'from solution {sol}. Expected: {exp_comp_sol}. Actual: '\
-                + f'{comp_sol}'
+        # check completed solution
+        comp_sol = srp.complete_solution(sol)
+        assert comp_sol == exp_comp_sol, 'Incorrect complete solution formed '\
+            + f'from solution {sol}. Expected: {exp_comp_sol}. Actual: '\
+            + f'{comp_sol}'
 
 
 def test_branch():
@@ -196,17 +194,17 @@ def test_branch():
             ]
         )
     ]
-    for bnb_selection_strategy in BnBSelectionStrategy:
-        for config, sol, branch_sols in TEST_CASES:
-            srp = SuitcaseReshuffleProblem(SuitCases(config), bnb_selection_strategy)
+    for config, sol, branch_sols in TEST_CASES:
+        srp = SuitcaseReshuffleProblem(
+            SuitCases(config), BnBSelectionStrategy.DEPTH_FIRST)
 
-            # branch on solutions, check branched solutions
-            new_sols = srp.branch(sol)
-            assert inspect.isgenerator(new_sols), 'Branch function must return '\
-                + 'a generator'
-            new_sols_list = list(new_sols)
-            assert new_sols_list == branch_sols, 'Incorrect branched solutions. '\
-                + f'Expected: {branch_sols}. Actual: {new_sols}'
+        # branch on solutions, check branched solutions
+        new_sols = srp.branch(sol)
+        assert inspect.isgenerator(new_sols), 'Branch function must return '\
+            + 'a generator'
+        new_sols_list = list(new_sols)
+        assert new_sols_list == branch_sols, 'Incorrect branched solutions. '\
+            + f'Expected: {branch_sols}. Actual: {new_sols}'
 
 
 def test_bnb_suitcasereshuffle():

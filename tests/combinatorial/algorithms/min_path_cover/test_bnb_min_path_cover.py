@@ -44,7 +44,7 @@ def test_bnb_minpathcover():
                     check_bnb_sol(mpc, bnb_type, params)
                     check_sol_vs_init_sol(mpc.best_cost, mpc.init_cost)
 
-                    # check final solution optimality if modified branch and bound
-                    # is used
+                    # check final solution optimality if modified branch and
+                    # bound is used
                     if bnb_type == 1:
                         check_sol_optimality(mpc.best_cost, mpc_len, 1.1)
