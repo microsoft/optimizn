@@ -39,18 +39,18 @@ class BnBProblem(OptProblem):
                 raise Exception('Initial solution is infeasible: '
                                 + f'{self.init_solution}')
             
-            # initialize call stack with root solution
+            # initialize stack with root solution
             root_sol = self.get_root()
             root_gen = self.branch(root_sol)
             if not inspect.isgenerator(root_gen):
                 raise Exception('Branch method must return a generator when '
                                 + 'running depth-first branch and bound')
-            self.call_stack = [(root_sol, root_gen)]
+            self.stack = [(root_sol, root_gen)]
         # initialize for depth-first-best-first or best-first branch and bound
         elif self.bnb_selection_strategy in {
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
                 BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST}:
-            self.queue = PriorityQueue()
+            self.priority_queue = PriorityQueue()
             self.total_iters = 0
             self.total_time_elapsed = 0
             super().__init__(params, logger)
@@ -66,10 +66,10 @@ class BnBProblem(OptProblem):
             root_sol = self.get_root()
             if self.bnb_selection_strategy ==\
                     BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
-                self.queue.put(
+                self.priority_queue.put(
                     (0, self.lbound(root_sol), self.sol_count, root_sol))
             else:
-                self.queue.put(
+                self.priority_queue.put(
                     (self.lbound(root_sol), 0, self.sol_count, root_sol))
             # solution tuples consist of four values: lower bound, solution
             # depth, solution count, solution
@@ -222,30 +222,30 @@ class BnBProblem(OptProblem):
                     # generator yielded nothing
                     continue
                 next_sol_gen = self.branch(next_sol)
-                self.call_stack.append((next_sol, next_sol_gen))
+                self.stack.append((next_sol, next_sol_gen))
                 _evaluate(next_sol, next_sol_gen)
-                # do not remove solution from call stack if evaluation was
+                # do not remove solution from stack if evaluation was
                 # terminated early
                 if self.terminate_early:
                     break
-                self.call_stack.pop()
+                self.stack.pop()
         
         # run branch and bound algorithm
-        while len(self.call_stack) > 0:
+        while len(self.stack) > 0:
             # check termination conditions
             if _terminate():
                 self.logger.info(
                     'Iterations/time limit reached, terminating algorithm')
                 break
 
-            # evaluate solution on call stack
-            sol, sol_gen = self.call_stack[-1]
+            # evaluate solution on stack
+            sol, sol_gen = self.stack[-1]
             _evaluate(sol, sol_gen)
-            # do not remove solution from call stack if evaluation was
+            # do not remove solution from stack if evaluation was
             # terminated early
             if self.terminate_early:
                 break
-            self.call_stack.pop()
+            self.stack.pop()
         
         # return best solution and best solution cost
         self._log_results(log_iters, force=True)
@@ -278,25 +278,26 @@ class BnBProblem(OptProblem):
         self.current_time_elapsed = 0
         original_total_time_elapsed = self.total_time_elapsed
 
-        # if problem class instance is loaded, queue is saved as list, so
-        # convert back to PriorityQueue
-        if type(self.queue) is not PriorityQueue:
-            queue = PriorityQueue()
-            for item in self.queue:
-                queue.put(item)
-            self.queue = queue
+        # if problem class instance is loaded, priority_queue is saved as list,
+        # so convert back to PriorityQueue
+        if type(self.priority_queue) is not PriorityQueue:
+            priority_queue = PriorityQueue()
+            for item in self.priority_queue:
+                priority_queue.put(item)
+            self.priority_queue = priority_queue
 
         # explore solutions
-        while not self.queue.empty() and self.current_iters < iters_limit and\
+        while not self.priority_queue.empty() and\
+                self.current_iters < iters_limit and\
                 self.current_time_elapsed < time_limit:
             # get solution, skip if lower bound is not less than best solution
             # cost
             if self.bnb_selection_strategy ==\
                     BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
-                depth, lbound, _, curr_sol = self.queue.get()
+                depth, lbound, _, curr_sol = self.priority_queue.get()
             elif self.bnb_selection_strategy ==\
                     BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
-                lbound, depth, _, curr_sol = self.queue.get()
+                lbound, depth, _, curr_sol = self.priority_queue.get()
             else:
                 raise Exception(
                     'Invalid value for bnb_selection_strategy, '
@@ -324,17 +325,17 @@ class BnBProblem(OptProblem):
                             self._update_best_solution(completed_sol)
 
                     # if lower bound is less than best solution cost, put
-                    # incomplete solution into queue
+                    # incomplete solution into priority queue
                     lbound = self.lbound(next_sol)
                     if self.cost_delta(self.best_cost, lbound) > 0:
                         self.sol_count += 1
                         if self.bnb_selection_strategy ==\
                                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
-                            self.queue.put(
+                            self.priority_queue.put(
                                 (depth - 1, lbound, self.sol_count, next_sol))
                         elif self.bnb_selection_strategy ==\
                                 BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
-                            self.queue.put(
+                            self.priority_queue.put(
                                 (lbound, depth - 1, self.sol_count, next_sol))
                         else:
                             raise Exception(
@@ -376,6 +377,6 @@ class BnBProblem(OptProblem):
         if self.bnb_selection_strategy in {
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST,
                 BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST}:
-            # convert the queue to a list before saving solution
-            self.queue = list(self.queue.queue)
+            # convert the priority queue to a list before saving solution
+            self.priority_queue = list(self.priority_queue.queue)
         super().persist()
