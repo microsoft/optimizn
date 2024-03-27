@@ -145,7 +145,47 @@ class BnBProblem(OptProblem):
                 f'Updated best solution to: {self.best_solution}')
             self.logger.info(
                 f'Updated best solution cost to: {self.best_cost}')
-    
+
+    def _evaluate_solution(self, sol, bnb_type, sol_lb=None):
+        # get lower bound of solution, if not provided
+        if sol_lb is None:
+            sol_lb = self.lbound(sol)
+
+        # evaluate if a more optimal solution can be obtained
+        branch = False
+        if self.cost_delta(self.best_cost, sol_lb) > 0:
+            branch = True
+            # compare against best solution
+            if self.is_feasible(sol):
+                # if solution is feasible, update best solution and
+                # best solution cost if needed
+                self._update_best_solution(sol)
+                branch = False
+            else:
+                # if algorithm type is 1 (look-ahead branch and bound),
+                # then complete the partial solution and update best
+                # solution and best solution cost if needed
+                if bnb_type == 1:
+                    completed_sol = self.complete_solution(sol)
+                    if self.is_feasible(completed_sol):
+                        self._update_best_solution(completed_sol)
+        
+        # return boolean to branch
+        return branch
+
+    def _update_progress_and_log(
+            self, start, original_total_time_elapsed, log_iters):
+        self.current_iters += 1
+        self.total_iters += 1
+        self.current_time_elapsed = time.time() - start
+        self.total_time_elapsed = original_total_time_elapsed +\
+            self.current_time_elapsed
+        self._log_results(log_iters)
+
+    def _terminate(self, iters_limit, time_limit):
+        return self.current_iters >= iters_limit or\
+            self.current_time_elapsed >= time_limit
+
     def _solve_df(self, iters_limit, log_iters, time_limit, bnb_type):
         '''
         This depth-first branch and bound implementation is based on the
@@ -167,7 +207,6 @@ class BnBProblem(OptProblem):
         https://www.youtube.com/watch?v=yV1d-b_NeK8, February 2018. Online;
         accessed 16-December-2022.
         '''
-
         # converts a list to a generator
         def _list_to_gen(lst):
             for item in lst:
@@ -185,58 +224,28 @@ class BnBProblem(OptProblem):
             if type(self.stack[0][1]) == list:
                 self.stack = list(map(
                     lambda i: (i[0], _list_to_gen(i[1])), self.stack))
-        # if this run is not the first, set skip_first_eval to True so the
-        # last solution put on the stack is not re-evaluated
-        skip_first_eval = self.total_iters != 0
-
-        # helper function to check termination conditions
-        def _terminate():
-            return self.current_iters >= iters_limit or\
-                self.current_time_elapsed >= time_limit
 
         # recursive helper function to evaluate a solution
-        def _evaluate(sol, sol_gen, skip_eval=False):
-            # evaluate the solution
+        def _evaluate(sol, sol_gen, skip_eval):
+            branch = True
             if not skip_eval:
-                # compare against best solution
-                feasible_sol = self.is_feasible(sol)
-                if feasible_sol:
-                    # if solution is feasible, update best solution and best
-                    # solution cost if needed
-                    self._update_best_solution(sol)
-                else:
-                    # if algorithm type is 1 (look-ahead branch and bound),
-                    # then complete the partial solution and update best
-                    # solution and best solution cost if needed
-                    if bnb_type == 1:
-                        completed_sol = self.complete_solution(sol)
-                        if self.is_feasible(completed_sol):
-                            self._update_best_solution(completed_sol)
-                
-                # update iterations count and time elapsed, log results
-                self.current_iters += 1
-                self.total_iters += 1
-                self.current_time_elapsed = time.time() - start
-                self.total_time_elapsed = original_total_time_elapsed +\
-                    self.current_time_elapsed
-                self._log_results(log_iters)
-
-                # check termination conditions
-                if feasible_sol:
-                    return
-                elif _terminate():
+                if self._terminate(iters_limit, time_limit):
                     self.logger.info(
                         'Iterations/time limit reached, terminating algorithm')
                     self.terminate_early = True
                     return
+            
+                # evaluate solution
+                branch = self._evaluate_solution(sol, bnb_type)
+                self._update_progress_and_log(
+                    start, original_total_time_elapsed, log_iters)
 
             # evaluate solutions obtained by branching
-            for next_sol in sol_gen:
-                # evaluate if a more optimal solution can be obtained
-                if self.cost_delta(self.best_cost, self.lbound(next_sol)) > 0:
+            if branch:
+                for next_sol in sol_gen:
                     next_sol_gen = self.branch(next_sol)
                     self.stack.append((next_sol, next_sol_gen))
-                    _evaluate(next_sol, next_sol_gen, skip_eval=False)
+                    _evaluate(next_sol, next_sol_gen, False)
                     # do not remove solution from stack if evaluation was
                     # terminated early
                     if self.terminate_early:
@@ -244,31 +253,22 @@ class BnBProblem(OptProblem):
                     self.stack.pop()
         
         # run branch and bound algorithm
+        skip_eval = False
         while len(self.stack) > 0:
-            # check termination conditions
-            if _terminate():
-                self.logger.info(
-                    'Iterations/time limit reached, terminating algorithm')
-                self.terminate_early = True
-                break
-
-            # evaluate solution on stack
+            # evaluate solution
             sol, sol_gen = self.stack[-1]
-            _evaluate(sol, sol_gen, skip_eval=skip_first_eval)
+            _evaluate(sol, sol_gen, skip_eval)
             # do not remove solution from stack if evaluation was
             # terminated early
             if self.terminate_early:
                 break
             self.stack.pop()
-        
-        # return best solution and best solution cost
-        self._log_results(log_iters, force=True)
-        return self.best_solution, self.best_cost
+            skip_eval = True
 
-    def _solve_dfbf_bfdf(self, iters_limit, log_iters, time_limit, bnb_type):
+    def _solve_dfbef_befdf(self, iters_limit, log_iters, time_limit, bnb_type):
         '''
-        This depth-first and/or best-first branch and bound implementation is
-        based on the following sources.
+        This depth-first-best-first or best-first-depth-first branch and bound
+        implementation is based on the following sources.
 
         This method executes either the traditional (bnb_type=0) or look-ahead
         (bnb_type=1) branch and bound algorithm. In traditional branch and
@@ -286,7 +286,7 @@ class BnBProblem(OptProblem):
         https://www.youtube.com/watch?v=yV1d-b_NeK8, February 2018. Online;
         accessed 16-December-2022.
         '''
-        # initialization
+        # initialization for current run
         start = time.time()
         self.current_iters = 0
         self.current_time_elapsed = 0
@@ -300,92 +300,59 @@ class BnBProblem(OptProblem):
                 priority_queue.put(item)
             self.priority_queue = priority_queue
 
-        # explore solutions
-        while not self.priority_queue.empty() and\
-                self.current_iters < iters_limit and\
-                self.current_time_elapsed < time_limit:
-            # get solution, skip if lower bound is not less than best solution
-            # cost
+        # evaluate solutions
+        while not self.priority_queue.empty():
+            if self._terminate(iters_limit, time_limit):
+                self.logger.info(
+                    'Iterations/time limit reached, terminating algorithm')
+                self.terminate_early = True
+                break
+
+            # get solution from priority queue
             if self.bnb_selection_strategy ==\
                     BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
-                depth, lbound, _, curr_sol = self.priority_queue.get()
-            elif self.bnb_selection_strategy ==\
-                    BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
-                lbound, depth, _, curr_sol = self.priority_queue.get()
+                depth, sol_lb, _, sol = self.priority_queue.get()
             else:
-                raise Exception(
-                    'Invalid value for bnb_selection_strategy, '
-                    + 'must be one of the following: '
-                    + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
-                    + ', BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST')
-            if self.cost_delta(self.best_cost, lbound) <= 0:
-                continue
+                sol_lb, depth, _, sol = self.priority_queue.get()
+            
+            # evaluate solution
+            branch = self._evaluate_solution(sol, bnb_type, sol_lb)
 
-            # get and process branched solutions
-            next_sols = self.branch(curr_sol)
-            for next_sol in next_sols:
-                # process branched solution
-                if self.is_feasible(next_sol):
-                    # if solution is feasible, update best solution and best
-                    # solution cost if needed
-                    self._update_best_solution(next_sol)
-                else:
-                    # if algorithm type is 1 (look-ahead branch and bound),
-                    # then complete solution and update best solution and best
-                    # solution cost if needed
-                    if bnb_type == 1:
-                        completed_sol = self.complete_solution(next_sol)
-                        if self.is_feasible(completed_sol):
-                            self._update_best_solution(completed_sol)
-
-                    # if lower bound is less than best solution cost, put
-                    # incomplete solution into priority queue
-                    lbound = self.lbound(next_sol)
-                    if self.cost_delta(self.best_cost, lbound) > 0:
-                        self.sol_count += 1
-                        if self.bnb_selection_strategy ==\
-                                BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
-                            self.priority_queue.put(
-                                (depth - 1, lbound, self.sol_count, next_sol))
-                        elif self.bnb_selection_strategy ==\
-                                BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
-                            self.priority_queue.put(
-                                (lbound, depth - 1, self.sol_count, next_sol))
-                        else:
-                            raise Exception(
-                                'Invalid value for bnb_selection_strategy, '
-                                + 'must be one of the following: '
-                                + 'BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST'
-                                + ', BnBSelectionStrategy.'
-                                + 'BEST_FIRST_DEPTH_FIRST')
-
-            # update iterations count and time elapsed
-            self.current_iters += 1
-            self.total_iters += 1
-            self.current_time_elapsed = time.time() - start
-            self.total_time_elapsed = original_total_time_elapsed +\
-                self.current_time_elapsed
-            # log best solution, best solution cost, and other info
-            self._log_results(log_iters)
-
-        # log results, return best solution and best solution cost
-        self._log_results(log_iters, force=True)
-        return self.best_solution, self.best_cost
+            # put solutions obtained through branching on priority queue
+            if branch:
+                for next_sol in self.branch(sol):
+                    next_sol_lb = self.lbound(next_sol)
+                    self.sol_count += 1
+                    if self.bnb_selection_strategy ==\
+                            BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+                        self.priority_queue.put(
+                            (depth - 1, next_sol_lb, self.sol_count, next_sol))
+                    else:
+                        self.priority_queue.put(
+                            (next_sol_lb, depth - 1, self.sol_count, next_sol))
+            
+            # update progress and log
+            self._update_progress_and_log(
+                start, original_total_time_elapsed, log_iters)
 
     def solve(self, iters_limit=1e6, log_iters=100, time_limit=3600,
               bnb_type=0):
         if self.bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
-            return self._solve_df(iters_limit, log_iters, time_limit, bnb_type)
+            self._solve_df(iters_limit, log_iters, time_limit, bnb_type)
         elif self.bnb_selection_strategy in {
                 BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST,
                 BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST}:
-            return self._solve_dfbf_bfdf(
+            self._solve_dfbef_befdf(
                 iters_limit, log_iters, time_limit, bnb_type)
         else:
             raise Exception(
                 f'Invalid value for bnb_selection_strategy, must be one of '
                 + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
                 + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST_DEPTH_FIRST')
+    
+        # log results, return best solution and best solution cost
+        self._log_results(log_iters, force=True)
+        return self.best_solution, self.best_cost
 
     def persist(self):
         if self.bnb_selection_strategy in {
