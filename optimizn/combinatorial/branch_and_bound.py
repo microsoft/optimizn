@@ -168,12 +168,26 @@ class BnBProblem(OptProblem):
         accessed 16-December-2022.
         '''
 
+        # converts a list to a generator
+        def _list_to_gen(lst):
+            for item in lst:
+                yield item
+
         # initialization for current run
         start = time.time()
         self.current_iters = 0
         self.current_time_elapsed = 0
         original_total_time_elapsed = self.total_time_elapsed
         self.terminate_early = False
+        # if stack elements contain lists instead of generators (instance
+        # loaded from memory), convert lists back to generators
+        if len(self.stack) != 0:
+            if type(self.stack[0][1]) == list:
+                self.stack = list(map(
+                    lambda i: (i[0], _list_to_gen(i[1])), self.stack))
+        # if this run is not the first, set skip_first_eval to True so the
+        # last solution put on the stack is not re-evaluated
+        skip_first_eval = self.total_iters != 0
 
         # helper function to check termination conditions
         def _terminate():
@@ -181,54 +195,53 @@ class BnBProblem(OptProblem):
                 self.current_time_elapsed >= time_limit
 
         # recursive helper function to evaluate a solution
-        def _evaluate(sol, sol_gen):
-            # compare against best solution
-            if self.is_feasible(sol):
-                # if solution is feasible, update best solution and best
-                # solution cost if needed
-                self._update_best_solution(sol)
-                return
-            else:
-                # if algorithm type is 1 (look-ahead branch and bound), then
-                # complete solution and update best solution and best
-                # solution cost if needed
-                if bnb_type == 1:
-                    completed_sol = self.complete_solution(sol)
-                    if self.is_feasible(completed_sol):
-                        self._update_best_solution(completed_sol)
-            
-            # check if a better solution could be obtained
-            if self.cost_delta(self.best_cost, self.lbound(sol)) <= 0:
-                return
-            
-            # update iterations count and time elapsed, log results
-            self.current_iters += 1
-            self.total_iters += 1
-            self.current_time_elapsed = time.time() - start
-            self.total_time_elapsed = original_total_time_elapsed +\
-                self.current_time_elapsed
-            self._log_results(log_iters)
-            
-            # check termination conditions
-            if _terminate():
-                self.logger.info(
-                    'Iterations/time limit reached, terminating algorithm')
-                self.terminate_early = True
-                return
+        def _evaluate(sol, sol_gen, skip_eval=False):
+            # evaluate the solution
+            if not skip_eval:
+                # compare against best solution
+                feasible_sol = self.is_feasible(sol)
+                if feasible_sol:
+                    # if solution is feasible, update best solution and best
+                    # solution cost if needed
+                    self._update_best_solution(sol)
+                else:
+                    # if algorithm type is 1 (look-ahead branch and bound),
+                    # then complete the partial solution and update best
+                    # solution and best solution cost if needed
+                    if bnb_type == 1:
+                        completed_sol = self.complete_solution(sol)
+                        if self.is_feasible(completed_sol):
+                            self._update_best_solution(completed_sol)
+                
+                # update iterations count and time elapsed, log results
+                self.current_iters += 1
+                self.total_iters += 1
+                self.current_time_elapsed = time.time() - start
+                self.total_time_elapsed = original_total_time_elapsed +\
+                    self.current_time_elapsed
+                self._log_results(log_iters)
 
-            # evaluate solutions obtained by branching on the current solution
+                # check termination conditions
+                if feasible_sol:
+                    return
+                elif _terminate():
+                    self.logger.info(
+                        'Iterations/time limit reached, terminating algorithm')
+                    self.terminate_early = True
+                    return
+
+            # evaluate solutions obtained by branching
             for next_sol in sol_gen:
-                if next_sol is None:
-                    # generator yielded nothing
-                    continue
-                next_sol_gen = self.branch(next_sol)
-                self.stack.append((next_sol, next_sol_gen))
-                _evaluate(next_sol, next_sol_gen)
-                # do not remove solution from stack if evaluation was
-                # terminated early
-                if self.terminate_early:
-                    break
-                self.stack.pop()
+                # evaluate if a more optimal solution can be obtained
+                if self.cost_delta(self.best_cost, self.lbound(next_sol)) > 0:
+                    next_sol_gen = self.branch(next_sol)
+                    self.stack.append((next_sol, next_sol_gen))
+                    _evaluate(next_sol, next_sol_gen, skip_eval=False)
+                    # do not remove solution from stack if evaluation was
+                    # terminated early
+                    if self.terminate_early:
+                        break
+                    self.stack.pop()
         
         # run branch and bound algorithm
         while len(self.stack) > 0:
@@ -236,11 +249,12 @@ class BnBProblem(OptProblem):
             if _terminate():
                 self.logger.info(
                     'Iterations/time limit reached, terminating algorithm')
+                self.terminate_early = True
                 break
 
             # evaluate solution on stack
             sol, sol_gen = self.stack[-1]
-            _evaluate(sol, sol_gen)
+            _evaluate(sol, sol_gen, skip_eval=skip_first_eval)
             # do not remove solution from stack if evaluation was
             # terminated early
             if self.terminate_early:
@@ -379,4 +393,12 @@ class BnBProblem(OptProblem):
                 BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST}:
             # convert the priority queue to a list before saving solution
             self.priority_queue = list(self.priority_queue.queue)
+        elif self.bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
+            # convert generators in stack to list
+            self.stack = list(map(lambda i: (i[0], list(i[1])), self.stack))
+        else:
+            raise Exception(
+                f'Invalid value for bnb_selection_strategy, must be one of '
+                + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
+                + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST_DEPTH_FIRST')
         super().persist()
