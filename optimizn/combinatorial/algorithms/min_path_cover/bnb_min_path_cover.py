@@ -203,21 +203,20 @@ class MinPathCoverProblem2(BnBProblem):
         # if next vertex to cover has already been covered, retain
         # solution and cover the vertex after that
         new_last_cov_vert = last_cov_vert + 1
-        if new_last_cov_vert > max(self.vertices):
-            return []
-        covered = set(path_cover.flatten())
-        if new_last_cov_vert in covered:
-            yield (sol[0], sol[1], new_last_cov_vert)
-        # otherwise, branch based on paths that can cover the next vertex,
-        # complete solution by picking paths that greedily cover remaining
-        # vertices
-        else:
-            cand_paths = np.array(list(self.cov_dict[new_last_cov_vert]))
-            for cand_path in cand_paths:
-                cand_path = np.array([cand_path])
-                new_path_cover = np.concatenate(
-                    (path_cover, cand_path), axis=0)
-                yield (new_path_cover, np.zeros((0, 3)), new_last_cov_vert)
+        if new_last_cov_vert <= max(self.vertices):
+            covered = set(path_cover.flatten())
+            if new_last_cov_vert in covered:
+                yield (sol[0], sol[1], new_last_cov_vert)
+            # otherwise, branch based on paths that can cover the next vertex,
+            # complete solution by picking paths that greedily cover remaining
+            # vertices
+            else:
+                cand_paths = np.array(list(self.cov_dict[new_last_cov_vert]))
+                for cand_path in cand_paths:
+                    cand_path = np.array([cand_path])
+                    new_path_cover = np.concatenate(
+                        (path_cover, cand_path), axis=0)
+                    yield (new_path_cover, np.zeros((0, 3)), new_last_cov_vert)
 
     def complete_solution(self, sol):
         new_rem_paths = []

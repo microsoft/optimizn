@@ -87,11 +87,9 @@ class ZeroOneKnapsackProblem(BnBProblem):
         return -1 * np.sum(np.array(sol) * np.array(self.values[:len(sol)]))
 
     def branch(self, sol):
-        if len(sol) >= len(self.weights):
-            yield
-
-        for val in [0, 1]:
-            yield deepcopy(sol) + [val]
+        if len(sol) < len(self.weights):
+            for val in [0, 1]:
+                yield deepcopy(sol) + [val]
 
     def is_feasible(self, sol):
         # check that array length is the same as the number of weights/values

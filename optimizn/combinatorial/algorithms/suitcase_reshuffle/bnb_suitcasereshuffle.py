@@ -123,27 +123,27 @@ class SuitcaseReshuffleProblem(BnBProblem):
 
     def branch(self, sol):
         last_item_idx = sol[1]
-        if last_item_idx == -1:
-            # if last item index is -1 (root solution), start from empty
-            # suitcases
-            suitcases = []
-            for capacity in self.capacities:
-                suitcases.append([capacity])
-        elif last_item_idx == len(self.sorted_weights) - 1:
-            # if last item has been packed, no further branching can be done
-            yield
-        else:
-            suitcases = sol[0].config
 
-        # get next item weight
-        next_item_idx = last_item_idx + 1
-        next_item_weight = self.sorted_weights[next_item_idx]
+        if last_item_idx != len(self.sorted_weights) - 1:
+            if last_item_idx == -1:
+                # if last item index is -1 (root solution), start from empty
+                # suitcases
+                suitcases = []
+                for capacity in self.capacities:
+                    suitcases.append([capacity])
+            else:
+                suitcases = sol[0].config
 
-        # pack next item in each suitcase that can fit it
-        for i in range(len(suitcases)):
-            extra_space = suitcases[i][-1]
-            if extra_space >= next_item_weight:
-                new_suitcases = deepcopy(suitcases)
-                new_suitcases[i] = new_suitcases[i][:-1] + [next_item_weight]\
-                    + [new_suitcases[i][-1] - next_item_weight]
-                yield (SuitCases(new_suitcases), next_item_idx)
+            # get next item weight
+            next_item_idx = last_item_idx + 1
+            next_item_weight = self.sorted_weights[next_item_idx]
+
+            # pack next item in each suitcase that can fit it
+            for i in range(len(suitcases)):
+                extra_space = suitcases[i][-1]
+                if extra_space >= next_item_weight:
+                    new_suitcases = deepcopy(suitcases)
+                    new_suitcases[i] = new_suitcases[i][:-1]\
+                        + [next_item_weight]\
+                        + [new_suitcases[i][-1] - next_item_weight]
+                    yield (SuitCases(new_suitcases), next_item_idx)

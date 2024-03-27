@@ -76,9 +76,8 @@ class TravelingSalesmanProblem(BnBProblem):
     def branch(self, sol):
         # build the path by creating a new solution for each uncovered city,
         # where the uncovered city is the next city in the path
-        if len(sol) == self.input_graph.num_cities:
-            return []
-        visited = set(sol)
-        for new_city in range(self.input_graph.dists.shape[0]):
-            if new_city not in visited:
-                yield sol + [new_city]
+        if len(sol) < self.input_graph.num_cities:
+            visited = set(sol)
+            for new_city in range(self.input_graph.dists.shape[0]):
+                if new_city not in visited:
+                    yield sol + [new_city]
