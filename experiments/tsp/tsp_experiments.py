@@ -101,29 +101,21 @@ def save_exp_results(exp_results):
 def run_o_sa1(city_graph, results, compute_time_mins, num_trials, reset_p):
     tsp_o_sa1 = TravSalsmn(city_graph)
     results['o_sa1'] = [tsp_o_sa1.init_cost]
-    results['o_sa1_time'] = [0]
-    s = time.time()
     tsp_o_sa1.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                      time_limit=compute_time_mins * 60 * num_trials,
                      log_iters=LOG_ITERS)
-    e = time.time()
     results['o_sa1'].append(tsp_o_sa1.best_cost)
-    results['o_sa1_time'].append(e - s)
 
 
 # function to run optimizn simulated annealing (continuous training)
 def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
     tsp_o_sa2 = TravSalsmn(city_graph)
     results['o_sa2'] = [tsp_o_sa2.init_cost]
-    results['o_sa2_time'] = [0]
     _clear_cont_train_data(tsp_o_sa2)
-    s = time.time()
     tsp_o_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                      time_limit=compute_time_mins * 60, log_iters=LOG_ITERS)
-    e = time.time()
     tsp_o_sa2.persist()
     results['o_sa2'].append(tsp_o_sa2.best_cost)
-    results['o_sa2_time'].append(e - s)
     for _ in range(num_trials - 1):
         class_name = tsp_o_sa2.name
         prior_params = load_latest_pckl(
@@ -136,14 +128,11 @@ def run_o_sa2(city_graph, results, compute_time_mins, num_trials, reset_p):
                     'No saved instance for TSP simulated annealing')
         else:
             raise Exception('TSP simulated annealing parameters have changed')
-        s = time.time()
         tsp_o_sa2.anneal(n_iter=MAX_ITERS, reset_p=reset_p,
                          time_limit=compute_time_mins * 60,
                          log_iters=LOG_ITERS)
-        e = time.time()
         tsp_o_sa2.persist()
         results['o_sa2'].append(tsp_o_sa2.best_cost)
-        results['o_sa2_time'].append(results['o_sa2_time'][-1] + e - s)
 
 
 # function to run python-tsp simulated annealing (single stretch)
@@ -156,7 +145,6 @@ def run_pt_sa1(city_graph, results, compute_time_mins, num_trials):
     opt_dist += city_graph.dists[
         permutation[0], permutation[len(permutation) - 1]]
     results['pt_sa1'] = [opt_dist]
-    results['pt_sa1_time'] = [0]
     print(f'Initial solution: {permutation}')
     print(f'Initial solution cost: {opt_dist}')
     s = time.time()
@@ -172,7 +160,6 @@ def run_pt_sa1(city_graph, results, compute_time_mins, num_trials):
             opt_permutation = permutation
         e = time.time()
     results['pt_sa1'].append(opt_dist)
-    results['pt_sa1_time'].append(e - s)
     print(f'Best solution: {opt_permutation}')
     print(f'Best solution cost: {opt_dist}')
 
@@ -187,7 +174,6 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
     opt_dist += city_graph.dists[
         permutation[0], permutation[len(permutation) - 1]]
     results['pt_sa2'] = [opt_dist]
-    results['pt_sa2_time'] = [0]
     print(f'Initial solution: {permutation}')
     print(f'Initial solution cost: {opt_dist}')
     s = time.time()
@@ -202,7 +188,6 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
             opt_permutation = permutation
         e = time.time()
     results['pt_sa2'].append(opt_dist)
-    results['pt_sa2_time'].append(e - s)
     print(f'Best solution: {opt_permutation}')
     print(f'Best solution cost: {opt_dist}')
     for _ in range(num_trials - 1):
@@ -218,7 +203,6 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
                 opt_dist = distance
             e = time.time()
         results['pt_sa2'].append(opt_dist)
-        results['pt_sa2_time'].append(results['pt_sa2_time'][-1] + e - s)
         print(f'Best solution: {opt_permutation}')
         print(f'Best solution cost: {opt_dist}')
 
@@ -235,14 +219,10 @@ def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
     mod_bnb1 = TravelingSalesmanProblem(
         {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [mod_bnb1.init_cost]
-    results[f'{alg_name}_time'] = [0]
-    s = time.time()
     mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60 * num_trials,
                    bnb_type=1)
-    e = time.time()
     results[f'{alg_name}'].append(mod_bnb1.best_cost)
-    results[f'{alg_name}_time'].append(e - s)
 
 
 # function to run optimizn modified branch and bound (continuous training)
@@ -257,15 +237,11 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
     mod_bnb2 = TravelingSalesmanProblem(
         {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [mod_bnb2.init_cost]
-    results[f'{alg_name}_time'] = [0]
     _clear_cont_train_data(mod_bnb2)
-    s = time.time()
     mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60, bnb_type=1)
-    e = time.time()
     mod_bnb2.persist()
     results[f'{alg_name}'].append(mod_bnb2.best_cost)
-    results[f'{alg_name}_time'].append(e - s)
     for _ in range(num_trials - 1):
         class_name = mod_bnb2.name
         prior_params = load_latest_pckl(
@@ -280,14 +256,10 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
         else:
             raise Exception(
                 'TSP modified branch and bound parameters have changed')
-        s = time.time()
         mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                        time_limit=compute_time_mins * 60, bnb_type=1)
-        e = time.time()
         mod_bnb2.persist()
         results[f'{alg_name}'].append(mod_bnb2.best_cost)
-        results[f'{alg_name}_time'].append(
-            results[f'{alg_name}_time'][-1] + e - s)
 
 
 # function to run optimizn traditional branch and bound (single stretch)
@@ -302,14 +274,10 @@ def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
     trad_bnb1 = TravelingSalesmanProblem(
         {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [trad_bnb1.init_cost]
-    results[f'{alg_name}_time'] = [0]
-    s = time.time()
     trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60 * num_trials,
                     bnb_type=0)
-    e = time.time()
     results[f'{alg_name}'].append(trad_bnb1.best_cost)
-    results[f'{alg_name}_time'].append(e - s)
 
 
 # function to run optimizn traditional branch and bound (continuous training)
@@ -324,15 +292,11 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
     trad_bnb2 = TravelingSalesmanProblem(
         {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [trad_bnb2.init_cost]
-    results[f'{alg_name}_time'] = [0]
     _clear_cont_train_data(trad_bnb2)
-    s = time.time()
     trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60, bnb_type=0)
-    e = time.time()
     trad_bnb2.persist()
     results[f'{alg_name}'].append(trad_bnb2.best_cost)
-    results[f'{alg_name}_time'].append(e - s)
     for _ in range(num_trials - 1):
         class_name = trad_bnb2.name
         prior_params = load_latest_pckl(
@@ -340,18 +304,14 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
         if trad_bnb2.params == prior_params:
             trad_bnb2 = load_latest_pckl(
                 path1=f'Data/{class_name}/DailyOpt', logger=trad_bnb2.logger)
-            if trad_bnb2 == None:
+            if trad_bnb2 is None:
                 raise Exception(
                     'No saved instance for TSP traditional branch '
                     + 'and bound')
         else:
             raise Exception(
                 'TSP traditional branch and bound parameters have changed')
-        s = time.time()
         trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                         time_limit=compute_time_mins * 60)
-        e = time.time()
         trad_bnb2.persist()
         results[f'{alg_name}'].append(trad_bnb2.best_cost)
-        results[f'{alg_name}_time'].append(
-            results[f'{alg_name}_time'][-1] + e - s)
