@@ -13,6 +13,7 @@ import time
 import shutil
 import os
 import pickle
+from optimizn.combinatorial.branch_and_bound import BnBSelectionStrategy
 
 
 # specify maximum number of iterations
@@ -40,8 +41,8 @@ def clear_previous_data():
         print('No previous city graph object found')
 
     # clear previous experiment results object
-    if os.path.isfile('exp_results.obj'):
-        os.remove('exp_results.obj')
+    if os.path.isfile('tsp_exp_results.obj'):
+        os.remove('tsp_exp_results.obj')
         print('Cleared previous experiment results dictionary')
     else:
         print('No previous experiment results dictionary found')
@@ -77,8 +78,8 @@ def get_exp_data(num_cities):
         print('Created and saved new city graph')
 
     # create/load experiment results dictionary
-    if os.path.isfile('exp_results.obj'):
-        exp_results_file = open('exp_results.obj', 'rb')
+    if os.path.isfile('tsp_exp_results.obj'):
+        exp_results_file = open('tsp_exp_results.obj', 'rb')
         exp_results = pickle.load(exp_results_file)
         exp_results_file.close()
         print('Loaded saved experiment results dictionary')
@@ -90,7 +91,7 @@ def get_exp_data(num_cities):
 
 # function to save experiment results dictionary
 def save_exp_results(exp_results):
-    exp_results_file = open('exp_results.obj', 'wb')
+    exp_results_file = open('tsp_exp_results.obj', 'wb')
     pickle.dump(exp_results, exp_results_file)
     exp_results_file.close()
     print('Saved experiment results dictionary')
@@ -224,18 +225,21 @@ def run_pt_sa2(city_graph, results, compute_time_mins, num_trials):
 
 # function to run optimizn modified branch and bound (single stretch)
 def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
-                 depth_first):
-    if depth_first:
+                 bnb_selection_strategy):
+    if bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
         alg_name = 'df_mod_bnb1'
-    else:
-        alg_name = 'mod_bnb1'
-    mod_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
+    elif bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+        alg_name = 'df_bef_mod_bnb1'
+    elif bnb_selection_strategy == BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
+        alg_name = 'bef_df_mod_bnb1'
+    mod_bnb1 = TravelingSalesmanProblem(
+        {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [mod_bnb1.init_cost]
     results[f'{alg_name}_time'] = [0]
     s = time.time()
     mod_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                    time_limit=compute_time_mins * 60 * num_trials,
-                   bnb_type=1, depth_first=depth_first)
+                   bnb_type=1)
     e = time.time()
     results[f'{alg_name}'].append(mod_bnb1.best_cost)
     results[f'{alg_name}_time'].append(e - s)
@@ -243,19 +247,21 @@ def run_mod_bnb1(city_graph, results, compute_time_mins, num_trials,
 
 # function to run optimizn modified branch and bound (continuous training)
 def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
-                 depth_first):
-    if depth_first:
+                 bnb_selection_strategy):
+    if bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
         alg_name = 'df_mod_bnb2'
-    else:
-        alg_name = 'mod_bnb2'
-    mod_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
+    elif bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+        alg_name = 'df_bef_mod_bnb2'
+    elif bnb_selection_strategy == BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
+        alg_name = 'bef_df_mod_bnb2'
+    mod_bnb2 = TravelingSalesmanProblem(
+        {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [mod_bnb2.init_cost]
     results[f'{alg_name}_time'] = [0]
     _clear_cont_train_data(mod_bnb2)
     s = time.time()
     mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                   time_limit=compute_time_mins * 60, bnb_type=1,
-                   depth_first=depth_first)
+                   time_limit=compute_time_mins * 60, bnb_type=1)
     e = time.time()
     mod_bnb2.persist()
     results[f'{alg_name}'].append(mod_bnb2.best_cost)
@@ -276,8 +282,7 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
                 'TSP modified branch and bound parameters have changed')
         s = time.time()
         mod_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                       time_limit=compute_time_mins * 60, bnb_type=1,
-                       depth_first=depth_first)
+                       time_limit=compute_time_mins * 60, bnb_type=1)
         e = time.time()
         mod_bnb2.persist()
         results[f'{alg_name}'].append(mod_bnb2.best_cost)
@@ -287,18 +292,21 @@ def run_mod_bnb2(city_graph, results, compute_time_mins, num_trials,
 
 # function to run optimizn traditional branch and bound (single stretch)
 def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
-                  depth_first):
-    if depth_first:
+                  bnb_selection_strategy):
+    if bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
         alg_name = 'df_trad_bnb1'
-    else:
-        alg_name = 'trad_bnb1'
-    trad_bnb1 = TravelingSalesmanProblem({'input_graph': city_graph})
+    elif bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+        alg_name = 'df_bef_trad_bnb1'
+    elif bnb_selection_strategy == BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
+        alg_name = 'bef_df_trad_bnb1'
+    trad_bnb1 = TravelingSalesmanProblem(
+        {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [trad_bnb1.init_cost]
     results[f'{alg_name}_time'] = [0]
     s = time.time()
     trad_bnb1.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
                     time_limit=compute_time_mins * 60 * num_trials,
-                    bnb_type=0, depth_first=depth_first)
+                    bnb_type=0)
     e = time.time()
     results[f'{alg_name}'].append(trad_bnb1.best_cost)
     results[f'{alg_name}_time'].append(e - s)
@@ -306,19 +314,21 @@ def run_trad_bnb1(city_graph, results, compute_time_mins, num_trials,
 
 # function to run optimizn traditional branch and bound (continuous training)
 def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
-                  depth_first):
-    if depth_first:
+                  bnb_selection_strategy):
+    if bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST:
         alg_name = 'df_trad_bnb2'
-    else:
-        alg_name = 'trad_bnb2'
-    trad_bnb2 = TravelingSalesmanProblem({'input_graph': city_graph})
+    elif bnb_selection_strategy == BnBSelectionStrategy.DEPTH_FIRST_BEST_FIRST:
+        alg_name = 'df_bef_trad_bnb2'
+    elif bnb_selection_strategy == BnBSelectionStrategy.BEST_FIRST_DEPTH_FIRST:
+        alg_name = 'bef_df_trad_bnb2'
+    trad_bnb2 = TravelingSalesmanProblem(
+        {'input_graph': city_graph}, bnb_selection_strategy)
     results[f'{alg_name}'] = [trad_bnb2.init_cost]
     results[f'{alg_name}_time'] = [0]
     _clear_cont_train_data(trad_bnb2)
     s = time.time()
     trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                    time_limit=compute_time_mins * 60, bnb_type=0,
-                    depth_first=depth_first)
+                    time_limit=compute_time_mins * 60, bnb_type=0)
     e = time.time()
     trad_bnb2.persist()
     results[f'{alg_name}'].append(trad_bnb2.best_cost)
@@ -339,8 +349,7 @@ def run_trad_bnb2(city_graph, results, compute_time_mins, num_trials,
                 'TSP traditional branch and bound parameters have changed')
         s = time.time()
         trad_bnb2.solve(iters_limit=MAX_ITERS, log_iters=LOG_ITERS,
-                        time_limit=compute_time_mins * 60,
-                        depth_first=depth_first)
+                        time_limit=compute_time_mins * 60)
         e = time.time()
         trad_bnb2.persist()
         results[f'{alg_name}'].append(trad_bnb2.best_cost)
