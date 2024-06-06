@@ -1,3 +1,5 @@
+pptree
+python_tsp
 numpy
 scipy
 cvxpy
