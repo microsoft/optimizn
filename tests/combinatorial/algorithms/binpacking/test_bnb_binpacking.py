@@ -5,7 +5,8 @@ from optimizn.combinatorial.algorithms.binpacking.bnb_binpacking import\
     BinPackingParams, BinPackingProblem
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol_optimality, check_sol_vs_init_sol
-
+import inspect
+from optimizn.combinatorial.branch_and_bound import BnBSelectionStrategy
 
 def test_param_equality():
     TEST_CASES = [
@@ -31,7 +32,7 @@ def test_constructor():
     ]
     for weights, capacity, expected in TEST_CASES:
         params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check capacity
         assert bpp.capacity == capacity, 'Incorrect capacity. Expected: '\
@@ -60,7 +61,8 @@ def test_constructor():
         assert bpp.best_solution[0] == expected, 'Incorrect allocation of '\
             + f'items to bins in initial solution. Expected: {expected}. '\
             + f'Actual: {bpp.best_solution[0]}'
-        assert bpp.best_solution[1] == -1, 'Incorrect value for index of '\
+        idx = len(bpp.sorted_item_weights) - 1
+        assert bpp.best_solution[1] == idx, 'Incorrect value for index of '\
             + f'last allocated item in sorted-by-decreasing-weight list of '\
             + f'items. Expected: -1. Actual: {bpp.best_solution[1]}'
 
@@ -69,44 +71,21 @@ def test_is_feasible():
     TEST_CASES = [
         # test case: (weights, capacity, solution, boolean for whether
         # solution is feasible)
-        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, -1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), True),
-        ([1, 2, 3], 3, ({1: {1, 2, 3}}, -1), False),
-        ([1, 2, 3], 3, ({1: {3, 1}, 2: {2}}, -1), False),
-        ([1, 2, 3], 3, ({1: {3, 2}, 2: {1}}, 1), False),
-        ([1, 2, 3], 3, ({1: {3, 2}, 2: {1}}, 1), False)
+        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, 2), True),
+        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 2), True),
+        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 2), False),
+        ([1, 2, 3], 3, ({1: {3}, 2: {1}}, 1), False),
+        ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 2), False)
     ]
     for weights, capacity, sol, feasible in TEST_CASES:
         params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
-
-        # check feasibility
-        is_feasible = bpp.is_feasible(sol)
-        assert is_feasible == feasible, 'Feasibility check failed '\
-            + f'for solution {sol}. Expected to be feasible: {feasible}. '\
-            + f'Actually feasible: {is_feasible}'
-
-
-def test_is_complete():
-    TEST_CASES = [
-        # test case: (weights, capacity, solution, boolean for whether
-        # solution is complete)
-        ([1, 2, 3], 3, ({1: {3}, 2: {1, 2}}, -1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}, 3: {1}}, 1), True),
-        ([1, 2, 3], 3, ({1: {3}, 2: {2}}, 1), False),
-        ([1, 2, 3], 3, ({1: {3}, 2: {1}}, 1), False),
-        ([1, 2, 3], 3, ({1: {2}, 2: {1}}, 1), False)
-    ]
-    for weights, capacity, sol, complete in TEST_CASES:
-        params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check completeness
-        is_complete = bpp.is_complete(sol)
-        assert is_complete == complete, 'Completeness check failed '\
-            + f'for solution {sol}. Expected to be complete: {complete}. '\
-            + f'Actually complete: {is_complete}'
+        is_feasible = bpp.is_feasible(sol)
+        assert is_feasible == feasible, 'Feasibility check failed for '\
+            + f'solution {sol}. Expected to be feasible: {feasible}. '\
+            + f'Actually feasible: {is_feasible}'
 
 
 def test_cost():
@@ -119,7 +98,7 @@ def test_cost():
     ]
     for weights, capacity, sol, cost in TEST_CASES:
         params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check cost
         sol_cost = bpp.cost(sol)
@@ -138,7 +117,7 @@ def test_lbound():
     ]
     for weights, capacity, sol, lb in TEST_CASES:
         params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check lower bounds
         lbound = bpp.lbound(sol)
@@ -165,37 +144,40 @@ def test_branch():
     ]
     for weights, capacity, expected, init_sol in TEST_CASES:
         params = BinPackingParams(weights, capacity)
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check branched solutions
         new_sols = bpp.branch(init_sol)
-        for new_sol in new_sols:
+        assert inspect.isgenerator(new_sols),\
+            'Branch function must return generator'
+        new_sols_list = list(new_sols)
+        for new_sol in new_sols_list:
             assert new_sol in expected, 'Unexpected solution produced by '\
                 + f'branching on solution {init_sol}: {new_sol}'
         for exp_sol in expected:
-            assert exp_sol in new_sols, f'Expected solution {exp_sol} was '\
-                + f'not produced by branching on solution {init_sol}'
+            assert exp_sol in new_sols_list, f'Expected solution {exp_sol}'\
+                + f' was not produced by branching on solution {init_sol}'
 
 
 def test_complete_solution():
     TEST_CASES = [
         # test case: (weights, capacity, incomplete solution, completed
         # solution)
-        ([1, 2, 3], 3, ({1: {3}}, 0), ({1: {3}, 2: {1, 2}}, 0)),
-        ([7, 8, 2, 3], 15, ({1: {2}}, 0), ({1: {2, 1}, 2: {3, 4}}, 0)),
+        ([1, 2, 3], 3, ({1: {3}}, 0), ({1: {3}, 2: {1, 2}}, 2)),
+        ([7, 8, 2, 3], 15, ({1: {2}}, 0), ({1: {2, 1}, 2: {3, 4}}, 3)),
         ([1, 2, 3, 8, 9, 10, 4, 5, 6, 7], 16,
          ({1: {6}, 2: {5}, 3: {4}}, 2),
-         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 2)),
+         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 9)),
         ([1, 2, 3, 8, 9, 10, 4, 5, 6, 7], 16,
          (dict(), -1),
-         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, -1))
+         ({1: {6, 9}, 2: {5, 10}, 3: {4, 8, 3}, 4: {7, 2, 1}}, 9))
     ]
     for weights, capacity, incomplete_sol, complete_sol in TEST_CASES:
         params = BinPackingParams(
             weights,
             capacity
         )
-        bpp = BinPackingProblem(params)
+        bpp = BinPackingProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
 
         # check completed solution
         sol = bpp.complete_solution(incomplete_sol)
@@ -213,16 +195,17 @@ def test_bnb_binpacking():
         ([49, 41, 34, 33, 29, 26, 26, 22, 20, 19], 100, 3),
         ([49, 41, 34, 33, 29, 26, 26, 22, 20, 19] * 2, 100, 6)
     ]
-    for weights, capacity, min_bins in TEST_CASES:
-        for bnb_type in [0, 1]:
-            params = BinPackingParams(weights, capacity)
-            bpp = BinPackingProblem(params)
-            init_cost = bpp.best_cost
-            bpp.solve(1000, 100, 120, bnb_type)
+    for bnb_selection_strategy in BnBSelectionStrategy:
+        for weights, capacity, min_bins in TEST_CASES:
+            for bnb_type in [0, 1]:
+                params = BinPackingParams(weights, capacity)
+                bpp = BinPackingProblem(params, bnb_selection_strategy)
+                bpp.solve(1000, 100, 120, bnb_type)
 
-            # check final solution
-            check_bnb_sol(bpp, bnb_type, params)
-            check_sol_vs_init_sol(bpp.best_cost, init_cost)
+                # check final solution
+                check_bnb_sol(bpp, bnb_type, params)
+                check_sol_vs_init_sol(bpp.best_cost, bpp.init_cost)
 
-            # check if final solution was within 1.5 * optimal solution cost
-            check_sol_optimality(bpp.best_cost, min_bins, 1.5)
+                # check if final solution was within 1.5 * optimal solution
+                # cost
+                check_sol_optimality(bpp.best_cost, min_bins, 1.5)

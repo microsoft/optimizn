@@ -24,7 +24,7 @@ For local development, do the following.
 This library offers a generalizeable implementation for simulated annealing through a superclass called `SimAnnealProblem`, located in `./optimizn/combinatorial/anneal.py` file. 
 
 To use simulated annealing for their own optimization problem, users should create a subclass specific to their optimization problem that extends `SimAnnealProblem`. The subclass must implement the following methods.
-- `get_candidate` (required): provides an initial solution
+- `get_initial_solution` (required): provides an initial solution
 - `next_candidate` (required): produces a neighboring solution, given a current solution
 - `cost` (required): objective function, returns a cost value for a given solution (lower cost value means more optimal solution)
 - `cost_delta` (optional): default is the difference between two cost values, can be changed based on the nature of the problem
@@ -35,12 +35,12 @@ This library offers a generalizeable implementation for branch and bound through
 This superclass supports two types of branch and bound. The first type is traditional branch and bound, where partial solutions are not checked against the current best solution. The second type is modified branch and bound, where partial solutions are completed and checked against the current best solution. 
 
 To use branch and bound for their own optimization problem, users should create a subclass specific to their optimization problem that extends `BnBProblem`. The subclass must implement the following methods.
-- `get_candidate` (required): provides an initial solution
+- `get_initial_solution` (optional): provides an initial solution
+- `get_root` (optional): provides the root solution, from which other solutions are obtainable via branching
 - `branch` (required): produces other solutions from a current solution, which correspond to subproblems with additional constraints and constrained solution spaces
 - `cost` (required): objective function, returns a cost value for a given solution (lower cost value means more optimal solution)
 - `lbound` (required): returns the lowest cost value for a given solution and all other solutions in the same constrained solution space (lower cost value means more optimal solution)
 - `is_feasible` (required): returns True if a given solution is feasible, False if not
-- `is_complete` (required): returns True if a given solution is complete, False if not
 - `complete_solution` (required/optional): completes a partial solution (required for modified branch and bound, optional for traditional branch and bound)
 - `cost_delta` (optional): default is the difference between two cost values, can be changed based on the nature of the problem
 

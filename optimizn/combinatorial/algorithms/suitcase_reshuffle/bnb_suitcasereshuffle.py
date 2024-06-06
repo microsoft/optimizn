@@ -20,13 +20,13 @@ class SuitcaseReshuffleProblem(BnBProblem):
     that can fit it
     '''
 
-    def __init__(self, suitcases):
+    def __init__(self, suitcases, bnb_selection_strategy):
         self.config = suitcases.config
         self.capacities = suitcases.capacities
         self.suitcases = suitcases
         self.sorted_weights = self._get_weights(self.config, True)
         self.weight_counts = self._get_weight_counts(self.sorted_weights)
-        super().__init__(suitcases)
+        super().__init__(suitcases, bnb_selection_strategy)
 
     def _get_weights(self, suitcases, sort=False):
         weights = list(reduce(
@@ -45,7 +45,7 @@ class SuitcaseReshuffleProblem(BnBProblem):
         return weight_counts
 
     def get_initial_solution(self):
-        return (deepcopy(self.suitcases), -1)
+        return (deepcopy(self.suitcases), len(self.sorted_weights) - 1)
     
     def get_root(self):
         return (deepcopy(self.suitcases), -1)
@@ -63,43 +63,14 @@ class SuitcaseReshuffleProblem(BnBProblem):
         for suitcase in suitcases.config:
             empty_space += suitcase[-1]
         return -1 * empty_space
-    
+
     def is_feasible(self, sol):
         suitcases = sol[0].config
 
-        # check if suitcase number is valid index
-        if sol[1] < -1 or sol[1] > len(self.sorted_weights) - 1:
+        # check last item index
+        last_item_index = sol[1]
+        if last_item_index != len(self.sorted_weights) - 1:
             return False
-
-        # for each suitcase, weights and extra space must be non-negative
-        for i in range(len(suitcases)):
-            suitcase = suitcases[i]
-            suitcase_sum = 0
-            for item in suitcase:
-                suitcase_sum += item
-                if item < 0:
-                    return False
-
-        # weights should not appear more often than in the original suitcase
-        # configuration
-        weight_counts = self._get_weight_counts(self._get_weights(suitcases))
-        for weight, count in weight_counts.items():
-            if weight not in self.weight_counts.keys():
-                return False
-            elif count > self.weight_counts[weight]:
-                return False
-            
-        # check if solution can be completed (remaining items can be packed
-        # into the suitcases)
-        completed_sol = self.complete_solution(sol)
-        if completed_sol is None:
-            return False
-        
-        return True
-        
-
-    def is_complete(self, sol):
-        suitcases = sol[0].config
 
         # for each suitcase, weights and extra space must equal original
         # capacity
@@ -147,35 +118,32 @@ class SuitcaseReshuffleProblem(BnBProblem):
             suitcases[min_suitcase] = suitcases[min_suitcase][:-1] + [weight]\
                 + [suitcases[min_suitcase][-1] - weight]
         
-        return (SuitCases(suitcases), sol[1])
+        return (SuitCases(suitcases), len(self.sorted_weights) - 1)
 
 
     def branch(self, sol):
         last_item_idx = sol[1]
-        if last_item_idx == -1:
-            # if last item index is 0 (initial solution), start from empty
-            # suitcases
-            suitcases = []
-            for capacity in self.capacities:
-                suitcases.append([capacity])
-        elif last_item_idx == len(self.sorted_weights) - 1:
-            # if last item has been packed, no further branching can be done
-            return []
-        else:
-            suitcases = sol[0].config
 
-        # get next item weight
-        next_item_idx = last_item_idx + 1
-        next_item_weight = self.sorted_weights[next_item_idx]
+        if last_item_idx != len(self.sorted_weights) - 1:
+            if last_item_idx == -1:
+                # if last item index is -1 (root solution), start from empty
+                # suitcases
+                suitcases = []
+                for capacity in self.capacities:
+                    suitcases.append([capacity])
+            else:
+                suitcases = sol[0].config
 
-        # pack next item in each suitcase that can fit it
-        new_sols = []
-        for i in range(len(suitcases)):
-            extra_space = suitcases[i][-1]
-            if extra_space >= next_item_weight:
-                new_suitcases = deepcopy(suitcases)
-                new_suitcases[i] = new_suitcases[i][:-1] + [next_item_weight]\
-                    + [new_suitcases[i][-1] - next_item_weight]
-                new_sols.append((SuitCases(new_suitcases), next_item_idx))
+            # get next item weight
+            next_item_idx = last_item_idx + 1
+            next_item_weight = self.sorted_weights[next_item_idx]
 
-        return new_sols
+            # pack next item in each suitcase that can fit it
+            for i in range(len(suitcases)):
+                extra_space = suitcases[i][-1]
+                if extra_space >= next_item_weight:
+                    new_suitcases = deepcopy(suitcases)
+                    new_suitcases[i] = new_suitcases[i][:-1]\
+                        + [next_item_weight]\
+                        + [new_suitcases[i][-1] - next_item_weight]
+                    yield (SuitCases(new_suitcases), next_item_idx)

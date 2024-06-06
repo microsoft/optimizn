@@ -3,7 +3,8 @@
 
 import numpy as np
 from copy import deepcopy
-from optimizn.combinatorial.simulated_annealing import SimAnnealProblem
+from optimizn.combinatorial.simulated_annealing import SimAnnealProblem,\
+    s_curve
 # from ortools.constraint_solver import routing_enums_pb2
 # from ortools.constraint_solver import pywrapcp
 
@@ -11,8 +12,8 @@ from optimizn.combinatorial.simulated_annealing import SimAnnealProblem
 class TravSalsmn(SimAnnealProblem):
     '''
     This simulated annealing implementation for the traveling salesman
-    problem is based on the following sources. The code presented in [2, 3] is
-    licensed under the MIT License. The original license texts are shown in the
+    problem is based on the following sources. The code presented in [2] is
+    licensed under the MIT License. The original license text is shown in the
     NOTICE.md file.
         
     Sources:
@@ -25,24 +26,9 @@ class TravSalsmn(SimAnnealProblem):
     [2] T. W. Schneider, "shiny-salesman/helpers.r."
     https://github.com/toddwschneider/shiny-salesman/blob/master/helpers.R,
     October 2014. Online; accessed 8-January-2023.
-
-    [3] F. Goulart, T. Frick, and Luan, "python-tsp/python_tsp/heuristics/
-    simulated_annealing.py."
-    https://github.com/fillipe-gsm/python-tsp/blob/master/python_tsp/heuristics/simulated_annealing.py.
-    Online; accessed 27-March-2023.
     '''
-    def __init__(self, params, temp_reduce_factor=0.99):
-        self.params = params
-        super().__init__()
-        self.temp_reduce_factor = temp_reduce_factor
-        
-        # set initial temperature
-        cost_diffs = []
-        for _ in range(100):
-            new_path = self.next_candidate(self.candidate)
-            cost_diffs.append(self.cost(new_path) - self.best_cost)
-        self.temperature = -1 * abs(
-            sum(cost_diffs) / len(cost_diffs)) / np.log(0.5)
+    def __init__(self, params):
+        super().__init__(params)
 
     def get_initial_solution(self):
         """
@@ -75,7 +61,7 @@ class TravSalsmn(SimAnnealProblem):
         return nu_candidate
     
     def get_temperature(self, iters):
-        return self.temperature * self.temp_reduce_factor
+        return s_curve(iters, 4000, 0, 10000)
 
 
 def dist_from_lat_long(lat1, long1, lat2, long2):

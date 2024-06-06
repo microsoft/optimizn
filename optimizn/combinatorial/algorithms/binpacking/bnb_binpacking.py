@@ -42,7 +42,7 @@ class BinPackingProblem(BnBProblem):
     remaining items can be put in bins in decreasing order of weight, into
     the first bin that can fit it. New bins created as needed
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.item_weights = {}  # mapping of items to weights
         self.sorted_item_weights = []  # sorted (weight, item) tuples (desc)
         for i in range(1, len(params.weights) + 1):
@@ -50,10 +50,11 @@ class BinPackingProblem(BnBProblem):
             self.sorted_item_weights.append((params.weights[i - 1], i))
         self.sorted_item_weights.sort(reverse=True)
         self.capacity = params.capacity
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
     
     def get_initial_solution(self):
-        return (self._pack_rem_items(dict(), -1), -1)
+        return (self._pack_rem_items(dict(), -1),
+                len(self.sorted_item_weights) - 1)
     
     def get_root(self):
         return (self._pack_rem_items(dict(), -1), -1)
@@ -161,62 +162,44 @@ class BinPackingProblem(BnBProblem):
         bin_packing = sol[0]
         last_item_idx = sol[1]
         next_item_idx = last_item_idx + 1
-        if next_item_idx >= len(self.sorted_item_weights):
-            return []
-        next_item_weight, next_item = self.sorted_item_weights[
-            next_item_idx]
+        if next_item_idx < len(self.sorted_item_weights):
+            next_item_weight, next_item = self.sorted_item_weights[
+                next_item_idx]
 
-        # remove items that have not been considered yet
-        bin_packing = self._filter_items(bin_packing, last_item_idx)
+            # remove items that have not been considered yet
+            bin_packing = self._filter_items(bin_packing, last_item_idx)
 
-        # pack items in bins
-        new_sols = []
-        extra_bin = 1
-        if len(bin_packing.keys()) != 0:
-            extra_bin = max(bin_packing.keys()) + 1
-        bins = set(bin_packing.keys()).union({extra_bin})
-        for bin in bins:
-            # create new bin if considering new bin index
-            new_bin_packing = copy.deepcopy(bin_packing)
-            if bin not in new_bin_packing.keys():
-                new_bin_packing[bin] = set()
+            # pack items in bins
+            extra_bin = 1
+            if len(bin_packing.keys()) != 0:
+                extra_bin = max(bin_packing.keys()) + 1
+            bins = set(bin_packing.keys()).union({extra_bin})
+            for bin in bins:
+                # create new bin if considering new bin index
+                new_bin_packing = copy.deepcopy(bin_packing)
+                if bin not in new_bin_packing.keys():
+                    new_bin_packing[bin] = set()
 
-            # check if bin has space
-            bin_weight = sum(
-                list(map(
-                    lambda x: self.item_weights[x],
-                    new_bin_packing[bin])
-                ))
-            if next_item_weight > self.capacity - bin_weight:
-                continue
+                # check if bin has space
+                bin_weight = sum(
+                    list(map(
+                        lambda x: self.item_weights[x],
+                        new_bin_packing[bin])
+                    ))
+                if next_item_weight > self.capacity - bin_weight:
+                    continue
 
-            # pack item in bin
-            new_bin_packing[bin].add(next_item)
-            new_sols.append((new_bin_packing, next_item_idx))
-        return new_sols
+                # pack item in bin
+                new_bin_packing[bin].add(next_item)
+                yield (new_bin_packing, next_item_idx)
 
     def is_feasible(self, sol):
         bin_packing = sol[0]
+        last_item_idx = sol[1]
 
-        # check that packed items are valid
-        items = set(reduce(
-            (lambda s1, s2: s1.union(s2)),
-            list(map(lambda b: bin_packing[b], bin_packing.keys()))
-        ))
-        if len(items.difference(set(range(1, len(self.item_weights)+1)))) != 0:
+        # check that last item index corresponds to last item
+        if last_item_idx != len(self.sorted_item_weights) - 1:
             return False
-
-        # check that for each bin, the weight is not exceeded
-        for bin in bin_packing.keys():
-            bin_weight = sum(
-                list(map(lambda x: self.item_weights[x], bin_packing[bin])))
-            if bin_weight > self.capacity:
-                return False
-
-        return True
-
-    def is_complete(self, sol):
-        bin_packing = sol[0]
 
         # check that all items are packed
         items = set(reduce(
@@ -236,4 +219,6 @@ class BinPackingProblem(BnBProblem):
         return True
 
     def complete_solution(self, sol):
-        return (self._pack_rem_items(copy.deepcopy(sol[0]), sol[1]), sol[1])
+        return (
+            self._pack_rem_items(copy.deepcopy(sol[0]), sol[1]),
+            len(self.sorted_item_weights) - 1)

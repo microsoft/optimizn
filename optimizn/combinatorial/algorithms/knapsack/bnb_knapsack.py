@@ -40,7 +40,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
     Date published: February 26, 2018
     Date accessed: December 16, 2022
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.values = params.values
         self.weights = params.weights
         self.capacity = params.capacity
@@ -52,7 +52,7 @@ class ZeroOneKnapsackProblem(BnBProblem):
             vw_ratios_ixs.append((vw_ratios[i], i))
         self.sorted_vw_ratios = sorted(vw_ratios_ixs)
         self.sorted_vw_ratios.reverse()
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         return self.complete_solution([])
@@ -87,18 +87,14 @@ class ZeroOneKnapsackProblem(BnBProblem):
         return -1 * np.sum(np.array(sol) * np.array(self.values[:len(sol)]))
 
     def branch(self, sol):
-        if len(sol) >= len(self.weights):
-            return []
-
-        new_sols = []
-        for val in [0, 1]:
-            new_sols.append(deepcopy(sol) + [val])
-        return new_sols
+        if len(sol) < len(self.weights):
+            for val in [0, 1]:
+                yield deepcopy(sol) + [val]
 
     def is_feasible(self, sol):
-        # check that array is not longer than the number of weights/values
-        check_length1 = len(sol) <= len(self.weights)
-        check_length2 = len(sol) <= len(self.values)
+        # check that array length is the same as the number of weights/values
+        check_length1 = len(sol) == len(self.weights)
+        check_length2 = len(sol) == len(self.values)
         check_length = check_length1 and check_length2
 
         # check that the only values in the array are 0 and 1
@@ -110,14 +106,6 @@ class ZeroOneKnapsackProblem(BnBProblem):
             self.weights[:len(sol)])) <= self.capacity
 
         return check_length and check_values and check_weight
-
-    def is_complete(self, sol):
-        # check that array length is the same as the number of weights/values
-        check_length1 = len(sol) == len(self.weights)
-        check_length2 = len(sol) == len(self.values)
-        check_length = check_length1 and check_length2
-
-        return check_length
 
     def complete_solution(self, sol):
         # greedily add other items to array

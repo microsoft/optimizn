@@ -5,10 +5,11 @@ from optimizn.combinatorial.algorithms.traveling_salesman.city_graph\
     import CityGraph
 from optimizn.combinatorial.algorithms.traveling_salesman.bnb_tsp import\
     TravelingSalesmanProblem
-from python_tsp.heuristics import solve_tsp_simulated_annealing
 import numpy as np
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
-    check_sol_optimality, check_sol_vs_init_sol
+    check_sol_vs_init_sol
+import inspect
+from optimizn.combinatorial.branch_and_bound import BnBSelectionStrategy
 
 
 class MockCityGraph:
@@ -28,47 +29,19 @@ def test_is_feasible():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, boolean for whether solution is feasible)
-        ([0, 1, 2, 3], True),
-        ([1, 0, 2, 3], True),
-        ([1, 2, 2], False),
-        ([1, 2, 3], True),
-        ([1, 2, 3, 3], False),
-        ([1, 2, 3, 0, 1], False)
-    ]
-    for sol, is_feasible in TEST_CASES:
-        feasible = tsp.is_feasible(sol)
-        assert is_feasible == feasible, 'Feasibility check failed '\
-            + f'for solution {sol}. Expected to be feasible: {is_feasible}. '\
-            + f'Actually feasible: {feasible}'
-
-
-def test_is_complete():
-    dists = np.array([
-        [0, 4, 2, 1],
-        [4, 0, 3, 4],
-        [2, 3, 0, 2],
-        [1, 4, 2, 0],
-    ])
-    mcg = MockCityGraph(dists)
-    params = {
-        'input_graph': mcg,
-    }
-    tsp = TravelingSalesmanProblem(params)
-    TEST_CASES = [
-        # test case: (solution, boolean for whether solution is complete)
         ([0, 1, 2, 3], True),
         ([1, 2], False),
         ([1, 2, 3], False),
         ([1, 2, 3, 0], True)
     ]
-    for sol, is_complete in TEST_CASES:
-        complete = tsp.is_complete(sol)
-        assert is_complete == complete, 'Completeness check failed '\
-            + f'for solution {sol}. Expected to be complete: {complete}. '\
-            + f'Actually complete: {complete}'
+    tsp = TravelingSalesmanProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
+    for sol, is_feasible in TEST_CASES:
+        feasible = tsp.is_feasible(sol)
+        assert is_feasible == feasible, 'feasiblity check failed for solution'\
+            + f' {sol}. Expected to be feasible: {is_feasible}. Actually '\
+            + f'feasible: {feasible}'
 
 
 def test_get_initial_solution_sorted_dists():
@@ -82,7 +55,7 @@ def test_get_initial_solution_sorted_dists():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
     exp_init_sol = [0, 1, 2, 3]
     exp_sorted_dists = [1, 2, 2, 3, 4, 4]
     assert tsp.best_solution == exp_init_sol, 'Invalid initial solution. '\
@@ -102,11 +75,11 @@ def test_complete_solution():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: partial solution
         [], [0], [0, 1], [1, 3], [0, 3, 2, 1]
     ]
+    tsp = TravelingSalesmanProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
     for path in TEST_CASES:
         comp_path = tsp.complete_solution(path)
         assert len(comp_path) == mcg.num_cities,\
@@ -128,7 +101,6 @@ def test_cost():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, cost of solution)
         ([0, 3, 2, 1], 10),
@@ -136,6 +108,7 @@ def test_cost():
         ([0, 1, 2, 3], 10),
         ([0, 1, 3, 2], 12)
     ]
+    tsp = TravelingSalesmanProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
     for sol, cost in TEST_CASES:
         sol_cost = tsp.cost(sol)
         assert sol_cost == cost, f'Incorrect cost for solution {sol}. '\
@@ -153,18 +126,22 @@ def test_lbound():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, lower bound of solution)
         ([0, 3, 2, 1], 10),
-        ([0, 3], 6),
-        ([0, 3, 2], 6),
+        ([0, 3], 8),
+        ([0, 3, 2], 8),
         ([0, 1, 2, 3], 10),
         ([0, 1, 3, 2], 12),
+        ([0, 1, 3], 11),
+        ([0, 1], 9),
+        ([0, 2], 8),
         ([0], 8),
         ([], 8)
     ]
     for sol, lower_bound in TEST_CASES:
+        tsp = TravelingSalesmanProblem(
+            params, BnBSelectionStrategy.DEPTH_FIRST)
         lb = tsp.lbound(sol)
         assert lb == lower_bound, 'Incorrect lower bound for solution '\
             + f'{sol}. Expected: {lower_bound}. Actual: {lb}'
@@ -181,7 +158,6 @@ def test_branch():
     params = {
         'input_graph': mcg,
     }
-    tsp = TravelingSalesmanProblem(params)
     TEST_CASES = [
         # test case: (solution, expected branched solutions)
         ([], [[0], [1], [2], [3]]),
@@ -193,9 +169,15 @@ def test_branch():
         ([1], [[1, 0], [1, 2], [1, 3]])
     ]
     for sol, branch_sols in TEST_CASES:
+        tsp = TravelingSalesmanProblem(
+            params, BnBSelectionStrategy.DEPTH_FIRST)
         new_sols = tsp.branch(sol)
-        assert branch_sols == new_sols, 'Incorrect branched solutions for '\
-            + f'solution: {sol}. Expected: {branch_sols}, Actual: {new_sols}'
+        assert inspect.isgenerator(new_sols),\
+            'Branch function must return generator'
+        new_sols_list = list(new_sols)
+        assert branch_sols == new_sols_list, 'Incorrect branched solutions '\
+            + f'for solution: {sol}. Expected: {branch_sols}, Actual: '\
+            + f'{new_sols_list}'
 
 
 def test_get_root():
@@ -203,10 +185,10 @@ def test_get_root():
     params = {
         'input_graph': graph,
     }
-    tsp = TravelingSalesmanProblem(params)
+    tsp = TravelingSalesmanProblem(params, BnBSelectionStrategy.DEPTH_FIRST)
     root_sol = tsp.get_root()
-    assert root_sol == [], 'Incorrect root node solution. Expected: '\
-        + f'[], Actual: {root_sol}'
+    assert root_sol == [0], 'Incorrect root node solution. Expected: '\
+        + f'[0], Actual: {root_sol}'
 
 
 def test_bnb_tsp():
@@ -214,14 +196,14 @@ def test_bnb_tsp():
     params = {
         'input_graph': graph,
     }
-    tsp1 = TravelingSalesmanProblem(params)
-    init_cost1 = tsp1.best_cost
-    tsp2 = TravelingSalesmanProblem(params)
-    init_cost2 = tsp2.best_cost
-    tsp2.solve(1e20, 1e20, 120, 1)
+    for bnb_selection_strategy in BnBSelectionStrategy:
+        tsp1 = TravelingSalesmanProblem(params, bnb_selection_strategy)
+        tsp1.solve(1e20, 1e20, 120, 1)
+        tsp2 = TravelingSalesmanProblem(params, bnb_selection_strategy)
+        tsp2.solve(1e20, 1e20, 120, 1)
 
-    # check final solutions
-    check_bnb_sol(tsp1, 0, params)
-    check_sol_vs_init_sol(tsp1.best_cost, init_cost1)
-    check_bnb_sol(tsp2, 1, params)
-    check_sol_vs_init_sol(tsp2.best_cost, init_cost2)
+        # check final solutions
+        check_bnb_sol(tsp1, 0, params)
+        check_sol_vs_init_sol(tsp1.best_cost, tsp1.init_cost)
+        check_bnb_sol(tsp2, 1, params)
+        check_sol_vs_init_sol(tsp2.best_cost, tsp2.init_cost)

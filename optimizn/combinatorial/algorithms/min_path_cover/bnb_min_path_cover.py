@@ -32,16 +32,16 @@ class MinPathCoverProblem1(BnBProblem):
     vertices, then the branching only produces the solution where the path
     is omitted from the cover
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.edges1 = params.edges1
         self.edges2 = params.edges2
         self.vertices = set(params.edges1.flatten()).union(
             set(params.edges2.flatten()))
         self._get_all_paths()
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
-        return (np.ones(len(self.all_paths)), -1)
+        return (np.ones(len(self.all_paths)), len(self.all_paths) - 1)
     
     def get_root(self):
         return (np.ones(len(self.all_paths)), -1)
@@ -81,12 +81,12 @@ class MinPathCoverProblem1(BnBProblem):
         return new_path_idxs
 
     def complete_solution(self, sol):
-        path_cover = list(sol[0])[:max(0, sol[1] + 1)]
-        for _ in range(len(self.all_paths) - len(sol[0])):
-            path_cover.append(0)
+        print(sol[1], self._pick_rem_paths(sol))
+        path_cover = list(sol[0])[:max(0, sol[1] + 1)] +\
+            [0] * (len(self.all_paths) - (sol[1] + 1))
         for idx in self._pick_rem_paths(sol):
             path_cover[idx] = 1
-        return (np.array(path_cover), sol[1])
+        return (np.array(path_cover), len(self.all_paths) - 1)
 
     def lbound(self, sol):
         # sum of existing paths and (number of vertices left to cover / 3) 
@@ -103,9 +103,8 @@ class MinPathCoverProblem1(BnBProblem):
         return sum(sol[0])
 
     def branch(self, sol):
-        new_sols = []
         if sol[1] + 1 >= len(self.all_paths):
-            return new_sols
+            return []
         for val in [0, 1]:
             # do not include path in cover if no new vertices are covered
             if val == 1:
@@ -117,19 +116,14 @@ class MinPathCoverProblem1(BnBProblem):
                         .difference(covered)) == 0:
                     continue
             new_sol = np.array(list(sol[0][:max(0, sol[1] + 1)]) + [val])
-            new_sols.append((new_sol, sol[1] + 1))
-        return new_sols
+            yield (new_sol, sol[1] + 1)
 
-    def is_sol(self, sol):
-        covered = set()
-        for i in range(len(sol[0])):
-            if sol[0][i] == 1:
-                covered = covered.union(set(self.all_paths[i]))
-        return covered == self.vertices
-
-    def is_complete(self, sol):
+    def is_feasible(self, sol):
         # check length of solution
         check_length = len(sol[0]) == len(self.all_paths)
+
+        # check that all values in solution are 0 or 1
+        check_vals = len(set(sol[0]).difference({0, 1})) == 0
     
         # check that all vertices are covered
         covered = set()
@@ -137,30 +131,12 @@ class MinPathCoverProblem1(BnBProblem):
             if sol[0][i] == 1:
                 covered = covered.union(set(self.all_paths[i]))
         check_coverage = covered == self.vertices
+
+        # check that all paths considered
+        check_last_index = sol[1] == (len(self.all_paths) - 1)
     
-        return check_length and check_coverage
-
-    def is_feasible(self, sol):
-        # check that solution is not longer than list of paths
-        check_length = len(sol[0]) <= len(self.all_paths)
-
-        # check that all values in solution are 0 or 1
-        check_vals = len(set(sol[0]).difference({0, 1})) == 0
-
-        # check that remaining cliques are enough to cover the uncovered
-        # vertices
-        covered_verts = set()
-        for i in range(len(sol[0])):
-            if sol[0][i] == 1:
-                covered_verts = covered_verts.union(set(self.all_paths[i]))
-        uncovered_verts = self.vertices.difference(covered_verts)
-        coverable_verts = set()
-        for i in range(sol[1] + 1, len(self.all_paths)):
-            coverable_verts = coverable_verts.union(set(self.all_paths[i]))
-        uncoverable_verts = uncovered_verts.difference(coverable_verts)
-        check_coverage = len(uncoverable_verts) == 0
-
-        return check_length and check_vals and check_coverage
+        return check_length and check_vals and check_coverage and\
+            check_last_index
 
 
 class MinPathCoverProblem2(BnBProblem):
@@ -179,8 +155,10 @@ class MinPathCoverProblem2(BnBProblem):
     correspond to path covers that cover vertex X+1. These path covers
     either remain the same (if the path cover already covered vertex X+1)
     or include one extra path (to cover vertex X+1).
+
+    Assumes that the vertices are in sequential order (e.g. {0, 1, 2, ...})
     '''
-    def __init__(self, params):
+    def __init__(self, params, bnb_selection_strategy):
         self.edges1 = params.edges1
         self.edges2 = params.edges2
         self.vertices = set(params.edges1.flatten()).union(
@@ -196,11 +174,11 @@ class MinPathCoverProblem2(BnBProblem):
                         if vert not in self.cov_dict.keys():
                             self.cov_dict[vert] = set()
                         self.cov_dict[vert].add(path)
-        super().__init__(params)
+        super().__init__(params, bnb_selection_strategy)
 
     def get_initial_solution(self):
         return (np.zeros((0, 3)), np.array(self.all_paths),
-                min(self.vertices) - 1)
+                max(self.vertices))
     
     def get_root(self):
         return (np.zeros((0, 3)), np.array(self.all_paths),
@@ -225,24 +203,20 @@ class MinPathCoverProblem2(BnBProblem):
         # if next vertex to cover has already been covered, retain
         # solution and cover the vertex after that
         new_last_cov_vert = last_cov_vert + 1
-        if new_last_cov_vert > len(self.vertices):
-            return []
-        new_sols = []
-        covered = set(path_cover.flatten())
-        if new_last_cov_vert in covered:
-            new_sols.append((sol[0], sol[1], new_last_cov_vert))
-        # otherwise, branch based on paths that can cover the next vertex,
-        # complete solution by picking paths that greedily cover remaining
-        # vertices
-        else:
-            cand_paths = np.array(list(self.cov_dict[new_last_cov_vert]))
-            for cand_path in cand_paths:
-                cand_path = np.array([cand_path])
-                new_path_cover = np.concatenate(
-                    (path_cover, cand_path), axis=0)
-                new_sols.append((new_path_cover, np.zeros((0, 3)),
-                                 new_last_cov_vert))
-        return new_sols
+        if new_last_cov_vert <= max(self.vertices):
+            covered = set(path_cover.flatten())
+            if new_last_cov_vert in covered:
+                yield (sol[0], sol[1], new_last_cov_vert)
+            # otherwise, branch based on paths that can cover the next vertex,
+            # complete solution by picking paths that greedily cover remaining
+            # vertices
+            else:
+                cand_paths = np.array(list(self.cov_dict[new_last_cov_vert]))
+                for cand_path in cand_paths:
+                    cand_path = np.array([cand_path])
+                    new_path_cover = np.concatenate(
+                        (path_cover, cand_path), axis=0)
+                    yield (new_path_cover, np.zeros((0, 3)), new_last_cov_vert)
 
     def complete_solution(self, sol):
         new_rem_paths = []
@@ -260,31 +234,22 @@ class MinPathCoverProblem2(BnBProblem):
             rem_verts = rem_verts.difference(set(opt_path))
             new_rem_paths.append(opt_path)
         new_rem_paths = np.array(new_rem_paths)
-        return (sol[0], new_rem_paths, sol[2])
+        return (sol[0], new_rem_paths, max(self.vertices))
     
-    def is_complete(self, sol):    
-        # check that all vertices are covered
-        path_cover = sol[0]
-        rem_paths = sol[1]
-        check_coverage = self.vertices == set(path_cover.flatten()).union(
-            set(rem_paths.flatten()))
-    
-        return check_coverage
-
     def is_feasible(self, sol):
         # check that each path in solution is valid
         path_cover_set = set(map(lambda p: tuple(p.astype(int)), sol[0]))
         all_paths_set = set(self.all_paths)
         check_paths_valid = len(path_cover_set.difference(all_paths_set)) == 0
-        
-        # check that remaining paths are enough to cover the uncovered
-        # vertices
-        covered_verts = set(sol[0].flatten())
-        uncovered_verts = self.vertices.difference(covered_verts)
-        rem_paths = all_paths_set.difference(path_cover_set)
-        coverable_verts = set()
-        for path in rem_paths:
-            coverable_verts = coverable_verts.union(set(path))
-        check_coverage = len(uncovered_verts.difference(coverable_verts)) == 0
 
-        return check_paths_valid and check_coverage
+        # check that all vertices are covered
+        path_cover = sol[0]
+        rem_paths = sol[1]
+        check_coverage = self.vertices == set(path_cover.flatten()).union(
+            set(rem_paths.flatten()))
+        
+        # check last vertex covered
+        check_last_vert_covered = sol[2] == max(self.vertices)
+    
+        return check_paths_valid and check_coverage and\
+            check_last_vert_covered

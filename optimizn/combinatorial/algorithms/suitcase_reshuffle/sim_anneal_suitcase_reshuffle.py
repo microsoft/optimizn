@@ -8,9 +8,8 @@ from copy import deepcopy
 
 class SuitCaseReshuffle(SimAnnealProblem):
 	def __init__(self, params):
-		self.params = params
 		self.name = "SuitcaseReshuffling"
-		super().__init__()
+		super().__init__(params)
 
 	def get_initial_solution(self):
 		self.candidate = self.params.config

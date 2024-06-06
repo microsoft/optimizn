@@ -6,6 +6,7 @@ from optimizn.combinatorial.algorithms.knapsack.bnb_knapsack\
     import KnapsackParams, ZeroOneKnapsackProblem
 from tests.combinatorial.algorithms.check_sol_utils import check_bnb_sol,\
     check_sol, check_sol_vs_init_sol
+from optimizn.combinatorial.branch_and_bound import BnBSelectionStrategy
 
 
 def test_bnb_zeroone_knapsack():
@@ -19,16 +20,16 @@ def test_bnb_zeroone_knapsack():
         (np.array([1, 3, 2, 5, 4]), np.array([10, 35, 20, 25, 5]), 4,
          [1, 1, 0, 0, 0])
     ]
-    for weights, values, capacity, opt_sol in TEST_CASES:
-        for bnb_type in [0, 1]:
-            params = KnapsackParams(values, weights, capacity)
-            kp = ZeroOneKnapsackProblem(params)
-            init_cost = kp.best_cost
-            kp.solve(1000, 100, 120, bnb_type)
+    for bnb_selection_strategy in BnBSelectionStrategy:
+        for weights, values, capacity, opt_sol in TEST_CASES:
+            for bnb_type in [0, 1]:
+                params = KnapsackParams(values, weights, capacity)
+                kp = ZeroOneKnapsackProblem(params, bnb_selection_strategy)
+                kp.solve(1000, 100, 120, bnb_type)
 
-            # check final solution
-            check_bnb_sol(kp, bnb_type, params)
-            check_sol_vs_init_sol(kp.best_cost, init_cost)
+                # check final solution
+                check_bnb_sol(kp, bnb_type, params)
+                check_sol_vs_init_sol(kp.best_cost, kp.init_cost)
 
-            # check final solution optimality
-            check_sol(kp.best_solution, [opt_sol])
+                # check final solution optimality
+                check_sol(kp.best_solution, [opt_sol])
