@@ -2,3 +2,4 @@ numpy
 scipy
 cvxpy
 graphing
+python-tsp
