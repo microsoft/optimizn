@@ -12,6 +12,7 @@ For local development, do the following.
 - Clone this repository.
 - Set up and activate a Python3 virtual environment using `conda`. More info here: [https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)
 - Navigate to the `optimizn` repo.
+- Run the command: `pip install requirements.txt` to install the dependencies in the conda virtual environment.
 - Run the command: `python3 setup.py install` to install the package in the conda virtual environment. 
 - As development progresses, run the above command to update the build in the conda virtual environment.
 - To run the unit tests, run the command: `pytest`
