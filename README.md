@@ -27,7 +27,7 @@ To use simulated annealing for their own optimization problem, users should crea
 - `get_initial_solution` (required): provides an initial solution
 - `reset_candidate` (optional): resets the current solution, defaults to `get_initial_solution` but can be overridden
 - `next_candidate` (required): produces a neighboring solution, given a current solution
-- `get_temperature` (optional): returns a temperature value (lower/higher value means lower/higher chances of updating current solution to a less optimal solution) given a number of iterations, defaults to $\frac{4000}{1 + e^(x / 3000)}$ but can be overridden
+- `get_temperature` (optional): returns a temperature value (lower/higher value means lower/higher chances of updating current solution to a less optimal solution) given a number of iterations, defaults to $\frac{4000}{1 + e^{x / 3000}}$ but can be overridden
 - `cost` (required): objective function, returns a cost value for a given solution (lower cost value means more optimal solution)
 - `cost_delta` (optional): default is the difference between two cost values, can be changed based on the nature of the problem
 
