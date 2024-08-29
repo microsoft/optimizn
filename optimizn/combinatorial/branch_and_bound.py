@@ -79,6 +79,12 @@ class BnBProblem(OptProblem):
                 + 'the following BnBSelectionStrategy enum values: DEPTH_FIRST'
                 + 'DEPTH_FIRST_BEST_FIRST, BEST_FIRST_DEPTH_FIRST')
 
+    def get_initial_solution(self):
+        '''
+        Gets the initial solution. Defaults to None, can be overridden
+        '''
+        return None
+
     def get_root(self):
         '''
         Produces the root solution, from which other solutions are obtainable
